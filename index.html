@@ -1,0 +1,1936 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>第九課〈在挫折中成長〉3D 沉浸式閱讀與學習評量</title>
+<style>
+:root{
+  --appH:100vh;
+  --gold:#e8b954;
+  --gold-dim:rgba(232,185,84,0.35);
+  --bg-panel:rgba(20,24,34,0.88);
+  --bg-card:rgba(30,36,50,0.95);
+  --text:#f5f2eb;
+  --muted:#b7becb;
+  --ok:#4cd98a;
+  --bad:#ff6b6b;
+  --accent:#66b3ff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
+html,body{
+  margin:0;padding:0;width:100%;height:var(--appH);overflow:hidden;
+  background:#121620;color:var(--text);
+  font-family:"PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif;
+}
+input,textarea{user-select:text;-webkit-user-select:text;}
+#c{position:fixed;inset:0;width:100%;height:var(--appH);display:block;touch-action:none;}
+
+/* 載入畫面 */
+#loading{
+  position:fixed;inset:0;z-index:100;background:linear-gradient(135deg,#1d2b44,#2c3e50);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .5s ease;
+}
+#loading.done{opacity:0;pointer-events:none;}
+.load-title{font-size:clamp(22px,4vw,34px);font-weight:700;color:var(--gold);margin-bottom:10px;letter-spacing:2px;}
+.load-sub{font-size:15px;color:#d6dce8;margin-bottom:20px;}
+.load-bar{width:min(320px,78vw);height:10px;background:rgba(255,255,255,0.15);border-radius:99px;overflow:hidden;}
+.load-fill{height:100%;width:10%;background:linear-gradient(90deg,#e8b954,#ffdf8e);transition:width .25s ease;}
+
+/* 入口畫面 */
+#titleScreen{
+  position:fixed;inset:0;z-index:80;
+  background:radial-gradient(circle at 50% 35%,rgba(45,62,92,0.82),rgba(14,18,28,0.92));
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.title-card{
+  max-width:560px;width:100%;background:var(--bg-panel);border:2px solid var(--gold);
+  border-radius:20px;padding:28px 26px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.5);
+  backdrop-filter:blur(10px);
+}
+.title-badge{
+  display:inline-block;padding:4px 14px;border-radius:99px;font-size:13px;
+  background:rgba(232,185,84,0.18);color:var(--gold);border:1px solid var(--gold-dim);margin-bottom:12px;
+}
+.title-h1{font-size:clamp(24px,4.5vw,34px);margin:4px 0 8px;color:#fff;letter-spacing:1px;}
+.title-author{font-size:15px;color:var(--muted);margin-bottom:16px;}
+.title-desc{font-size:15px;line-height:1.7;color:#e3e7ef;margin-bottom:22px;text-align:left;background:rgba(255,255,255,0.05);padding:14px 16px;border-radius:12px;}
+.btn-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.btn{
+  border:none;border-radius:12px;padding:12px 22px;font-size:16px;font-weight:700;cursor:pointer;
+  transition:transform .12s ease,filter .15s ease;font-family:inherit;
+}
+.btn:active{transform:scale(0.96);}
+.btn-primary{background:linear-gradient(135deg,#e8b954,#d49b2b);color:#1a1508;box-shadow:0 4px 15px rgba(232,185,84,0.35);}
+.btn-secondary{background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.25);}
+.btn-small{padding:8px 14px;font-size:14px;border-radius:10px;}
+
+/* HUD */
+#hud{position:fixed;inset:0;pointer-events:none;z-index:20;display:none;}
+.hud-top-left{
+  position:absolute;top:14px;left:14px;display:flex;flex-direction:column;gap:8px;
+  max-width:min(340px,62vw);pointer-events:auto;
+}
+.stat-box{
+  background:var(--bg-panel);border:1.5px solid var(--gold-dim);border-radius:12px;
+  padding:8px 12px;backdrop-filter:blur(6px);
+}
+.hp-row{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:5px;}
+.hp-bar{flex:1;height:10px;background:rgba(255,255,255,0.15);border-radius:99px;overflow:hidden;}
+.hp-fill{height:100%;width:100%;background:linear-gradient(90deg,#ff6b6b,#4cd98a);transition:width .3s;}
+.spark-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--gold);}
+.quest-box{
+  background:var(--bg-panel);border-left:4px solid var(--gold);border-radius:10px;
+  padding:9px 12px;font-size:13.5px;line-height:1.45;
+}
+.quest-title{font-weight:700;color:var(--gold);margin-bottom:2px;font-size:14px;}
+
+.hud-top-right{
+  position:absolute;top:14px;right:14px;display:flex;gap:8px;flex-wrap:wrap;
+  justify-content:flex-end;pointer-events:auto;max-width:34vw;
+}
+.hud-btn{
+  background:var(--bg-panel);color:var(--text);border:1.5px solid var(--gold-dim);
+  border-radius:10px;padding:7px 11px;font-size:13px;font-weight:600;cursor:pointer;
+  backdrop-filter:blur(6px);
+}
+.hud-btn:hover{border-color:var(--gold);}
+
+/* 目標提示與互動按鈕 */
+#targetPrompt{
+  position:fixed;bottom:110px;left:50%;transform:translateX(-50%);z-index:25;
+  display:none;flex-direction:column;align-items:center;gap:8px;pointer-events:auto;
+}
+.prompt-pill{
+  background:rgba(20,24,34,0.9);border:2px solid var(--gold);color:var(--gold);
+  padding:10px 20px;border-radius:99px;font-size:16px;font-weight:700;cursor:pointer;
+  box-shadow:0 6px 20px rgba(0,0,0,0.45);animation:pulse 1.6s infinite;
+}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.04);}}
+
+/* 底部快捷導航 */
+.hud-bottom-right{
+  position:absolute;bottom:16px;right:16px;display:flex;gap:8px;pointer-events:auto;
+}
+
+/* 觸控搖桿 */
+#pad{
+  position:fixed;left:22px;bottom:22px;width:116px;height:116px;border-radius:50%;
+  background:rgba(255,255,255,0.1);border:2px solid rgba(232,185,84,0.55);
+  z-index:25;display:none;touch-action:none;pointer-events:auto;
+}
+#padKnob{
+  position:absolute;left:50%;top:50%;width:46px;height:46px;border-radius:50%;
+  transform:translate(-50%,-50%);background:rgba(232,185,84,0.85);
+  box-shadow:0 2px 10px rgba(0,0,0,0.4);pointer-events:none;
+}
+@media (pointer:coarse){#pad{display:block;}}
+
+/* Toast */
+#toast{
+  position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:90;
+  background:rgba(20,24,34,0.95);border:1.5px solid var(--gold);color:#fff;
+  padding:10px 18px;border-radius:12px;font-size:14px;display:none;max-width:86vw;text-align:center;
+}
+
+/* 對話／題目／寫作彈窗 */
+#modalOverlay{
+  position:fixed;inset:0;z-index:60;background:rgba(10,13,20,0.72);
+  display:none;align-items:center;justify-content:center;padding:14px;backdrop-filter:blur(4px);
+}
+.modal-card{
+  width:min(680px,96vw);max-height:88vh;overflow-y:auto;
+  background:var(--bg-card);border:2px solid var(--gold);border-radius:18px;
+  padding:22px 22px 20px;box-shadow:0 18px 50px rgba(0,0,0,0.6);
+}
+.modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.12);padding-bottom:10px;}
+.modal-tag{font-size:12px;padding:3px 10px;border-radius:99px;background:rgba(232,185,84,0.2);color:var(--gold);font-weight:700;}
+.modal-title{font-size:19px;font-weight:700;color:#fff;margin:0;}
+.story-text{font-size:16.5px;line-height:1.85;color:#eef2f7;background:rgba(255,255,255,0.04);padding:14px 16px;border-radius:12px;margin-bottom:16px;}
+.story-text em{color:var(--gold);font-style:normal;font-weight:700;text-decoration:underline;text-underline-offset:4px;}
+
+.q-meta{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin-bottom:8px;}
+.q-text{font-size:17px;line-height:1.6;font-weight:600;margin-bottom:14px;color:#fff;}
+.opt-list{display:flex;flex-direction:column;gap:9px;margin-bottom:14px;}
+.opt-btn{
+  text-align:left;padding:12px 14px;border-radius:11px;border:1.5px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.06);color:#fff;font-size:15.5px;cursor:pointer;line-height:1.5;
+  transition:border-color .15s,background .15s;font-family:inherit;
+}
+.opt-btn:hover{border-color:var(--gold);background:rgba(232,185,84,0.12);}
+.opt-btn.selected{border-color:var(--accent);background:rgba(102,179,255,0.2);}
+.opt-btn.correct{border-color:var(--ok);background:rgba(76,217,138,0.22);}
+.opt-btn.wrong{border-color:var(--bad);background:rgba(255,107,107,0.22);}
+
+/* 填空、排序、配對 */
+.fill-box{font-size:17px;line-height:1.8;background:rgba(255,255,255,0.05);padding:14px;border-radius:12px;margin-bottom:12px;}
+.fill-blank{display:inline-block;min-width:74px;padding:2px 10px;border-bottom:2px solid var(--gold);color:var(--gold);font-weight:700;text-align:center;}
+.tile-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.tile-btn{
+  padding:9px 15px;border-radius:10px;border:1.5px solid var(--gold-dim);
+  background:rgba(255,255,255,0.08);color:#fff;font-size:15px;cursor:pointer;font-family:inherit;
+}
+.tile-btn.active{background:var(--gold);color:#1a1508;font-weight:700;}
+
+.order-item{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);margin-bottom:8px;
+}
+.order-arrows{display:flex;gap:6px;}
+.mini-btn{
+  padding:5px 10px;border-radius:7px;border:1px solid rgba(255,255,255,0.25);
+  background:rgba(255,255,255,0.1);color:#fff;cursor:pointer;font-size:13px;
+}
+
+.match-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px;}
+.match-row{
+  display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:11px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);
+}
+.match-select{
+  width:100%;padding:9px 10px;border-radius:8px;background:#1a2030;color:#fff;
+  border:1.5px solid var(--gold-dim);font-size:14.5px;font-family:inherit;
+}
+
+.hint-box{
+  display:none;padding:11px 14px;border-radius:10px;margin-bottom:12px;font-size:14.5px;line-height:1.55;
+  background:rgba(255,107,107,0.15);border:1px solid var(--bad);color:#ffd5d5;
+}
+.ok-box{
+  display:none;padding:11px 14px;border-radius:10px;margin-bottom:12px;font-size:14.5px;
+  background:rgba(76,217,138,0.15);border:1px solid var(--ok);color:#c9f7dc;
+}
+
+/* 寫作站樣式 */
+.writing-guide{background:rgba(232,185,84,0.1);border:1px solid var(--gold-dim);border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:14.5px;line-height:1.65;}
+.toolbox-btn{background:rgba(102,179,255,0.16);color:#9cd0ff;border:1px solid rgba(102,179,255,0.4);padding:7px 12px;border-radius:8px;cursor:pointer;font-size:13.5px;margin-bottom:10px;}
+.toolbox-panel{display:none;background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13.5px;line-height:1.6;}
+.chip-group{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px;}
+.chip{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);padding:3px 9px;border-radius:99px;font-size:12.5px;cursor:pointer;}
+.chip:hover{border-color:var(--gold);color:var(--gold);}
+.w-input{
+  width:100%;min-height:66px;padding:10px 12px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.25);
+  background:#141925;color:#fff;font-size:15.5px;line-height:1.6;font-family:inherit;resize:vertical;margin-bottom:10px;
+}
+.w-input:focus{outline:none;border-color:var(--gold);}
+.check-list{display:flex;flex-direction:column;gap:6px;margin:10px 0 14px;font-size:14px;}
+.check-item{display:flex;align-items:center;gap:8px;cursor:pointer;}
+
+/* 雙角色選擇卡片 */
+.avatar-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+.avatar-card{
+  padding:12px 10px;border-radius:14px;border:2px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.06);color:#fff;cursor:pointer;text-align:center;
+  transition:border-color .15s,background .15s,transform .12s;font-family:inherit;
+}
+.avatar-card:hover{border-color:var(--gold-dim);transform:translateY(-2px);}
+.avatar-card.active{border-color:var(--gold);background:rgba(232,185,84,0.2);box-shadow:0 0 18px rgba(232,185,84,0.25);}
+.avatar-icon{font-size:32px;margin-bottom:4px;}
+.avatar-name{font-weight:700;font-size:15.5px;color:var(--gold);margin-bottom:3px;}
+.avatar-sub{font-size:12.5px;color:#d6dce8;line-height:1.4;}
+
+/* 證書與地圖清單 */
+.station-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin:12px 0;}
+.st-card{
+  padding:12px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.15);
+  background:rgba(255,255,255,0.05);cursor:pointer;text-align:left;
+}
+.st-card.cleared{border-color:var(--ok);}
+.st-card.locked{opacity:0.45;cursor:not-allowed;}
+#certCanvas{width:100%;height:auto;border-radius:12px;border:2px solid var(--gold);margin:10px 0;background:#fff;}
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+
+<div id="loading">
+  <div class="load-title">第九課〈在挫折中成長〉</div>
+  <div class="load-sub">正在建置 3D 沉浸式學習場景…</div>
+  <div class="load-bar"><div class="load-fill" id="loadFill"></div></div>
+</div>
+
+<div id="titleScreen" style="display:none;">
+  <div class="title-card">
+    <div class="title-badge">國小五年級國語・3D 閱讀觀察與學習評量</div>
+    <h1 class="title-h1">九、在挫折中成長</h1>
+    <div class="title-author">作者：楊裕貿</div>
+    <div class="title-desc">
+      歡迎來到〈在挫折中成長〉立體學習園區！<br>
+      你將依序走過<strong>「人生十字路口」</strong>、<strong>「拳擊擂臺」</strong>、<strong>「植物生態園區」</strong>與<strong>「生命鍛造工坊」</strong>，透過閱讀課文、完成 19 道閱讀與議論文結構挑戰題，以及句型仿寫練習，收集「勇氣火花」並獲得專屬學習證書。<br><br>
+      <span style="color:var(--gold);font-size:14px;">操作方式：電腦使用 W/A/S/D 或方向鍵移動、滑鼠拖曳轉動視角；平板或手機可使用左下角搖桿移動。</span>
+    </div>
+    <div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px;">請選擇你的探索角色：</div>
+    <div class="avatar-grid">
+      <button class="avatar-card active" data-av="squirrel">
+        <div class="avatar-icon">🐿️</div>
+        <div class="avatar-name">森林探險松鼠</div>
+        <div class="avatar-sub">女性化造型・蓬鬆大尾巴<br>頭戴蝴蝶結與小披風</div>
+      </button>
+      <button class="avatar-card" data-av="warrior">
+        <div class="avatar-icon">🛡️</div>
+        <div class="avatar-name">勇氣鎧甲戰士</div>
+        <div class="avatar-sub">男性化造型・佩戴學校扯鈴<br>手持發光信念火把</div>
+      </button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnStart">開始探索</button>
+      <button class="btn btn-secondary" id="btnResume" style="display:none;">繼續上次進度</button>
+    </div>
+  </div>
+</div>
+
+<div id="hud">
+  <div class="hud-top-left">
+    <div class="stat-box">
+      <div class="hp-row">
+        <span>專注體力</span>
+        <div class="hp-bar"><div class="hp-fill" id="hpFill"></div></div>
+        <span id="hpNum">100</span>
+      </div>
+      <div class="spark-row">
+        <span>勇氣火花：<strong id="sparkCount">0</strong> / 18</span>
+        <span id="actLabel">第一幕</span>
+      </div>
+    </div>
+    <div class="quest-box">
+      <div class="quest-title" id="questTitle">目標站點</div>
+      <div id="questObj">前往發光路標處閱讀課文</div>
+    </div>
+  </div>
+
+  <div class="hud-top-right">
+    <button class="hud-btn" id="btnMap">站別一覽</button>
+    <button class="hud-btn" id="btnText">課文回顧</button>
+    <button class="hud-btn" id="btnAudio">音效：開</button>
+    <button class="hud-btn" id="btnHelp">操作說明</button>
+    <button class="hud-btn" id="btnTeacherDemo" style="border-color:var(--gold);color:var(--gold);">教師示範</button>
+  </div>
+
+  <div class="hud-bottom-right">
+    <button class="hud-btn" id="btnTeleport">前往目標點</button>
+  </div>
+</div>
+
+<div id="targetPrompt">
+  <button class="prompt-pill" id="btnInteract">進入本站學習</button>
+</div>
+
+<div id="pad"><div id="padKnob"></div></div>
+<div id="toast"></div>
+
+<div id="modalOverlay">
+  <div class="modal-card" id="modalCard"></div>
+</div>
+
+<script src="models.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+/* =========================================================
+   1. 基礎設定與狀態管理
+========================================================= */
+const SAVE_KEY = 'lesson09-growth-v1';
+const CERT_KEY = 'lesson09-growth-certs-v1';
+
+function updateAppHeight(){
+  const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  document.documentElement.style.setProperty('--appH', `${Math.round(h)}px`);
+}
+updateAppHeight();
+window.addEventListener('resize', updateAppHeight);
+if(window.visualViewport) window.visualViewport.addEventListener('resize', updateAppHeight);
+
+const setLoad = (pct, msg) => {
+  const fill = document.getElementById('loadFill');
+  if(fill) fill.style.width = `${pct}%`;
+  const sub = document.querySelector('.load-sub');
+  if(sub && msg) sub.textContent = msg;
+};
+
+/* WebAudio 輕量音效 */
+const AU = {
+  enabled: true,
+  ctx: null,
+  init(){ if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+  tone(freq, dur=0.12, type='sine', vol=0.12){
+    if(!this.enabled) return;
+    try{
+      this.init();
+      if(this.ctx.state==='suspended') this.ctx.resume();
+      const o = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(vol, this.ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+      o.connect(g); g.connect(this.ctx.destination);
+      o.start(); o.stop(this.ctx.currentTime + dur);
+    }catch(e){}
+  },
+  click(){ this.tone(520, 0.06, 'triangle', 0.08); },
+  correct(){ this.tone(587, 0.1, 'sine', 0.12); setTimeout(()=>this.tone(880, 0.18, 'sine', 0.12), 90); },
+  wrong(){ this.tone(210, 0.18, 'sawtooth', 0.09); },
+  clear(){ [523,659,784,1046].forEach((f,i)=>setTimeout(()=>this.tone(f,0.16,'sine',0.11), i*90)); }
+};
+
+/* =========================================================
+   2. 課文與關卡題庫 (ST) — 原文一字不改，選擇題答案平均分布
+========================================================= */
+const ST = [
+  {
+    id: 0,
+    act: 1,
+    kind: 'story',
+    env: 'hutong',
+    name: '序章：人生的十字路口',
+    para: '第一段（導讀）',
+    quest: '站別 1：人生的十字路口',
+    obj: '走近前方的發光路牌，開始閱讀第一段課文。',
+    prompt: '閱讀序章課文',
+    pos: new THREE.Vector3(0, 0, 8),
+    target: () => new THREE.Vector3(0, 1.5, 4),
+    area: {x0:-16, x1:16, z0:-14, z1:16},
+    text: '<em>遇上困難，你會勇敢面對，還是選擇逃避？身處逆境，你會尋求突破，還是維持現狀？遇到失敗，你會奮戰再起，還是宣告放棄？</em>人生的道路上往往崎嶇不平，甚至困境重重，只有在每一次的挫折中勇往直前，接受困境的考驗，才能磨練出堅強的意志。',
+    dialogBtn: '繼續前進'
+  },
+  {
+    id: 1,
+    act: 1,
+    env: 'hutong',
+    name: '第一關：抉擇的路口',
+    para: '第一段',
+    quest: '第一關：抉擇的路口',
+    obj: '走到分岔路牌前，完成第 1 段閱讀挑戰。',
+    prompt: '開始第一關評量',
+    pos: new THREE.Vector3(0, 0, 2),
+    target: () => new THREE.Vector3(0, 1.8, -5),
+    area: {x0:-16, x1:16, z0:-14, z1:16},
+    text: '遇上困難，你會勇敢面對，還是選擇逃避？身處逆境，你會尋求突破，還是維持現狀？遇到失敗，你會奮戰再起，還是宣告放棄？人生的道路上往往崎嶇不平，甚至困境重重，<em>只有在每一次的挫折中勇往直前，接受困境的考驗，才能磨練出堅強的意志。</em>',
+    steps: [
+      {
+        type: 'choice',
+        level: '擷取訊息',
+        q: '根據文本，作者認為只有在什麼情況下，才能磨練出堅強的意志？',
+        options: [
+          '遇到困難時先選擇逃避，等心情平復後再說',
+          '在每一次的挫折中勇往直前，接受困境的考驗',
+          '盡量讓自己維持現狀，避免走上崎嶇的道路',
+          '只要沒有遇到失敗，就能自然擁有堅強意志'
+        ],
+        answer: 1, // B
+        hint: '請讀第一段最後一句：「只有在每一次的……才能磨練出堅強的意志。」'
+      },
+      {
+        type: 'tf',
+        level: '詮釋',
+        q: '課文開頭連續問了三個問題（「遇上困難，你會……？」），目的是要提醒讀者思考面對逆境時的態度。',
+        answer: true,
+        hint: '想想看，作者寫這三個二選一的問題，是想知道你的答案，還是要引導我們思考呢？'
+      },
+      {
+        type: 'fill',
+        level: '擷取訊息',
+        q: '請選出正確的詞語填入空格中：',
+        sentence: '人生的道路上往往崎嶇不平，甚至困境重重，只有在每一次的挫折中勇往直前，接受困境的＿，才能磨練出堅強的意志。',
+        tiles: ['考驗', '鼓勵', '保護', '休息'],
+        answer: '考驗',
+        hint: '回到第一段最後一句，找找看「接受困境的（？）」這個詞語。'
+      }
+    ]
+  },
+  {
+    id: 2,
+    act: 2,
+    env: 'dawn',
+    name: '第二關：初登奧運與低潮',
+    para: '第二段（前半）',
+    quest: '第二關：拳擊擂臺',
+    obj: '走上拳擊擂臺旁的紀錄看板，認識陳念琴的故事。',
+    prompt: '探索拳擊擂臺',
+    pos: new THREE.Vector3(0, 0, 10),
+    target: () => new THREE.Vector3(0, 2.0, 0),
+    area: {x0:-18, x1:18, z0:-16, z1:16},
+    text: '臺灣第一位進軍奧運的女子拳擊手陳念琴，在西元二○一六年滿懷希望踏上巴西 里約的奧運舞臺，沒想到卻在十六強止步。<em>一直以來，她比誰都認真練習，也因此，她比誰都更加失落。</em>這次的挫折讓她陷入低潮，但她慢慢調適心情，接受失敗的事實，並相信自己能東山再起，開始全力為東京 奧運備戰。',
+    steps: [
+      {
+        type: 'tf',
+        level: '擷取訊息',
+        q: '陳念琴是臺灣第一位進軍奧運的女子拳擊手，她在西元二○一六年首次參加巴西里約奧運就獲得了銅牌。',
+        answer: false,
+        hint: '仔細看看第二段開頭，她在二○一六年里約奧運的成績是「幾強止步」呢？'
+      },
+      {
+        type: 'choice',
+        level: '推論',
+        q: '根據文本，為什麼陳念琴在十六強止步後「比誰都更加失落」？',
+        options: [
+          '因為她覺得自己以後再也無法比賽',
+          '因為身邊的教練和家人對她很失望',
+          '因為那場比賽的對手實力遠不如她',
+          '因為一直以來她比誰都認真練習'
+        ],
+        answer: 3, // D
+        hint: '找找第二段第二句「一直以來，她比誰都……，也因此，她比誰都更加失落。」'
+      },
+      {
+        type: 'fill',
+        level: '擷取訊息',
+        q: '請選出正確的成語填入空格中：',
+        sentence: '這次的挫折讓她陷入低潮，但她慢慢調適心情，接受失敗的事實，並相信自己能＿，開始全力為東京 奧運備戰。',
+        tiles: ['東山再起', '半途而廢', '維持現狀', '不勞而獲'],
+        answer: '東山再起',
+        hint: '課文裡用哪一個成語來形容她「失敗後重新振作」的信念？'
+      }
+    ]
+  },
+  {
+    id: 3,
+    act: 2,
+    env: 'dawn',
+    name: '第三關：抗癌重生與巴黎奪牌',
+    para: '第二段（後半）',
+    quest: '第三關：榮耀里程碑',
+    obj: '前往擂臺後方的三座奧運里程碑獎臺。',
+    prompt: '挑戰榮耀里程碑',
+    pos: new THREE.Vector3(0, 0, -2),
+    target: () => new THREE.Vector3(0, 1.8, -10),
+    area: {x0:-18, x1:18, z0:-16, z1:16},
+    text: '正當狀態越來越好時，她卻不幸得到癌症，圓夢路上再度遇到打擊。治療的副作用讓她的體能變差，她仍堅持不斷的訓練，<em>雖然最後在八強落敗，但她已經找回當初的自信。</em>二○二四年的夏天，她三度參加奧運，終於在巴黎 奧運獲得銅牌。陳念琴的拳擊之路屢屢遇到困境，她卻能一一克服困難的考驗，將挫折化為前進的動力，勇敢的成長，創造出自己的成就。',
+    steps: [
+      {
+        type: 'order',
+        level: '統整',
+        q: '請將陳念琴參與三次奧運的歷程，依照課文發生的先後順序排列（由早到晚）：',
+        labels: ['最早發生', '最後發生'],
+        items: [
+          '踏上巴西里約奧運舞臺，在十六強止步',
+          '治療癌症並堅持訓練，在東京奧運八強落敗',
+          '三度參加奧運，在巴黎奧運獲得銅牌'
+        ],
+        hint: '依照時間「2016 里約 → 東京奧運 → 2024 巴黎」的順序來排排看！'
+      },
+      {
+        type: 'multi',
+        level: '詮釋',
+        q: '根據文本，陳念琴在拳擊之路上展現了哪些面對挫折的態度？（選出全部正確的選項）',
+        options: [
+          '接受失敗的事實並調適心情',
+          '罹癌治療期間仍堅持不斷訓練',
+          '因為體能變差而決定放棄東京奧運',
+          '將挫折化為前進的動力',
+          '一遇到打擊就立刻逃避比賽'
+        ],
+        answer: [0, 1, 3],
+        hint: '再讀一次第二段，看看陳念琴在十六強止步和生病時分別做了什麼決定。'
+      },
+      {
+        type: 'choice',
+        level: '評鑑',
+        q: '雖然陳念琴在東京奧運八強落敗，沒有拿到獎牌，為什麼課文肯定她的表現？',
+        options: [
+          '因為她已經找回當初的自信',
+          '因為她打破了世界最高紀錄',
+          '因為她決定從此退出拳擊界',
+          '因為她的對手主動把獎牌讓給她'
+        ],
+        answer: 0, // A
+        hint: '看看第二段中段：「雖然最後在八強落敗，但她已經找回……」'
+      }
+    ]
+  },
+  {
+    id: 4,
+    act: 3,
+    env: 'field',
+    name: '生態導覽：植物的逆境',
+    kind: 'story',
+    para: '第三段（導覽）',
+    quest: '站別 5：植物生存生態區',
+    obj: '走進陽光下的植物園區，觀察沙漠、森林與海灘的植物。',
+    prompt: '閱讀植物生態介紹',
+    pos: new THREE.Vector3(0, 0, 11),
+    target: () => new THREE.Vector3(0, 1.5, 4),
+    area: {x0:-20, x1:20, z0:-16, z1:16},
+    text: '自然界中的植物無法像動物一樣自由移動，如果遇到環境或氣候的改變，生存的衝擊就隨之而來。面對這些困境，植物卻能在地球存活超過三十億年，<em>靠的就是接受環境給予的挫折，進而調適改變自己</em>，讓自身能在酷熱、嚴寒和缺水的逆境中生存下來。',
+    dialogBtn: '進入生態觀察'
+  },
+  {
+    id: 5,
+    act: 3,
+    env: 'field',
+    name: '第四關：植物的生存智慧',
+    para: '第三段',
+    quest: '第四關：植物的生存智慧',
+    obj: '觀察仙人掌、落葉樹與椰子樹，完成配對與理解挑戰。',
+    prompt: '開始生態區評量',
+    pos: new THREE.Vector3(0, 0, 4),
+    target: () => new THREE.Vector3(0, 1.5, -5),
+    area: {x0:-20, x1:20, z0:-16, z1:16},
+    text: '沙漠中的仙人掌，為了對抗高溫又缺水的環境，發展出肥厚的莖存放水分，葉片也演化為針刺狀來降低水分蒸發。有些落葉樹種為適應低溫，往往會在秋冬時節落葉，減少樹葉消耗養分，將能量存起來，以待開春時節給予幼芽養分。沙灘上椰子樹掉落的椰子，常被潮水帶進海裡，漂流的過程可能長達數月，還好靠著厚厚的外皮保護，種子即使泡在海水也不會腐爛。只要被海浪沖上了沙灘，就可以生根發芽。',
+    steps: [
+      {
+        type: 'match',
+        level: '擷取訊息',
+        q: '請將三種植物與它們克服逆境的方法配對起來：',
+        zones: ['仙人掌（高溫缺水）', '落葉樹種（低溫）', '椰子（海水漂流）'],
+        cards: [
+          '肥厚的莖存放水分，葉片成針刺狀',
+          '秋冬時節落葉，減少養分消耗',
+          '厚厚的外皮保護，種子泡海水不腐爛'
+        ],
+        answer: {
+          '仙人掌（高溫缺水）': '肥厚的莖存放水分，葉片成針刺狀',
+          '落葉樹種（低溫）': '秋冬時節落葉，減少養分消耗',
+          '椰子（海水漂流）': '厚厚的外皮保護，種子泡海水不腐爛'
+        },
+        hint: '回到第三段，分別找找沙漠、秋冬低溫、海灘這三個地方的植物有什麼特別構造或做法。'
+      },
+      {
+        type: 'choice',
+        level: '推論',
+        q: '根據文本，有些落葉樹在秋冬時節落葉，將能量存起來，最主要的目的是什麼？',
+        options: [
+          '讓樹幹看起來變得比較輕盈',
+          '避免葉片被海浪沖走而腐爛',
+          '等待開春時節給予幼芽養分',
+          '讓葉片演化成針刺狀來防身'
+        ],
+        answer: 2, // C
+        hint: '讀讀第三段第二句：「將能量存起來，以待……」'
+      },
+      {
+        type: 'tf',
+        level: '統整',
+        q: '自然界中的植物無法像動物一樣自由移動來躲避危險，因此牠們能在地球存活超過三十億年，靠的是接受環境的挫折並調適改變自己。',
+        answer: true,
+        hint: '看看第三段最後兩句，植物面臨環境或氣候改變時，靠什麼存活下來？'
+      }
+    ]
+  },
+  {
+    id: 6,
+    act: 4,
+    env: 'sunset',
+    name: '第五關：生命的鍛造與總結',
+    para: '第四段',
+    quest: '第五關：鍛造工坊',
+    obj: '走近發光的鍛造鐵砧，讀懂伽利略的名言與課文總結。',
+    prompt: '進入鍛造工坊評量',
+    pos: new THREE.Vector3(0, 0, 9),
+    target: () => new THREE.Vector3(-2, 1.5, 0),
+    area: {x0:-16, x1:16, z0:-14, z1:16},
+    text: '義大利科學家伽利略說：<em>「生命如鍛造的鐵塊，愈被敲打，愈能發出火花。」</em>既然人生充滿考驗，當挫折來臨時，可以接受挫折的敲擊鍛鍊，以正向的心態面對逆境，從中發現自己的不足，並尋求解決問題的方法。如此，才能化危機為轉機並調整自己，進而成長壯大，綻放生命的光彩。',
+    steps: [
+      {
+        type: 'choice',
+        level: '詮釋',
+        q: '義大利科學家伽利略說：「生命如鍛造的鐵塊，愈被敲打，愈能發出火花。」這句話想表達什麼道理？',
+        options: [
+          '鐵塊一定要用大火燒過，才能拿來做成有用的工具',
+          '人生經歷愈多考驗與磨練，愈能激發出光芒與成長',
+          '科學家平常除了做實驗外，也喜歡觀察鐵匠打鐵',
+          '只要躲開所有的敲打與困難，生命就會過得很平順'
+        ],
+        answer: 1, // B
+        hint: '想想看，句子裡的「鐵塊」比喻什麼？「敲打」和「火花」又分別比喻什麼呢？'
+      },
+      {
+        type: 'choice',
+        level: '統整',
+        q: '把陳念琴、沙漠仙人掌和伽利略的名言放在一起看，這篇課文最想告訴我們的核心主旨是什麼？',
+        options: [
+          '運動員和植物都必須經過非常痛苦的訓練，才有可能拿奧運銅牌',
+          '只要不斷向別人尋求幫助，就永遠不會在人生道路上遇到失敗',
+          '大自然裡的植物比人類更懂得如何去適應高溫與缺水的困難環境',
+          '面對挫折時保持正向並調整自己，就能化危機為轉機並成長壯大'
+        ],
+        answer: 3, // D
+        hint: '讀讀最後一段最後一句：「如此，才能……」'
+      },
+      {
+        type: 'fill',
+        level: '擷取訊息',
+        q: '請選出正確的詞語填入空格中：',
+        sentence: '當挫折來臨時，可以接受挫折的敲擊鍛鍊，以＿的心態面對逆境，從中發現自己的不足，並尋求解決問題的方法。',
+        tiles: ['正向', '消極', '逃避', '抱怨'],
+        answer: '正向',
+        hint: '在第四段第二句找找「以（？）的心態面對逆境」。'
+      }
+    ]
+  },
+  {
+    id: 7,
+    act: 4,
+    env: 'sunset',
+    name: '第六關：議論文結構大解析',
+    para: '全文結構（論點與論據）',
+    quest: '第六關：議論文結構',
+    obj: '站在鍛造工坊中央，整理整篇課文的論點與論據結構。',
+    prompt: '挑戰議論文結構',
+    pos: new THREE.Vector3(0, 0, 5),
+    target: () => new THREE.Vector3(0, 1.5, -1),
+    area: {x0:-16, x1:16, z0:-14, z1:16},
+    text: '【議論文結構提示】<br>一篇議論文通常包含三個核心部分：<em>「論點」</em>（作者在開頭提出的核心主張）、<em>「論據」</em>（用來支持論點的人物故事或自然現象例子），以及<em>「重申論點」</em>（在結尾再次強調並總結全文）。',
+    steps: [
+      {
+        type: 'choice',
+        level: '統整',
+        q: '這篇課文屬於「議論文」，通常包含「論點、論據、重申論點」三個部分。課文第一段提出「只有在挫折中勇往直前，才能磨練出堅強意志」，這個部分屬於什麼？',
+        options: [
+          '用來舉例說明的「論據」',
+          '整篇文章主張的「論點」',
+          '最後再次強調的「結論」',
+          '引發讀者好奇的「故事」'
+        ],
+        answer: 1, // B
+        hint: '想想看，作者在文章開頭最想告訴大家的核心想法或主張是什麼呢？'
+      },
+      {
+        type: 'choice',
+        level: '統整',
+        q: '課文第二段寫出拳擊手陳念琴克服挫折奪牌的故事，第三段寫出植物適應惡劣環境的例子，這兩段在議論文中扮演什麼角色？',
+        options: [
+          '用來提出文章開頭的新問題',
+          '用來記錄大自然的百科知識',
+          '用來支持論點的「論據」',
+          '用來反駁第一段的相反意見'
+        ],
+        answer: 2, // C
+        hint: '作者為什麼要舉出陳念琴和植物的例子呢？是為了證明第一段的想法很有道理喔！'
+      },
+      {
+        type: 'choice',
+        level: '推論',
+        q: '為了讓「在挫折中成長」的道理更有說服力，作者在課文第二、三段用了哪兩種不同類型的「論據」來舉例？',
+        options: [
+          '真實人物的故事與自然界植物的現象',
+          '古代神話傳說與現代的科幻小說故事',
+          '課本裡的插畫與同學們的旅遊日記',
+          '歷史上的戰爭事件與科學家的發明'
+        ],
+        answer: 0, // A
+        hint: '回想一下，第二段寫的是誰？第三段寫的又是什麼生物呢？'
+      },
+      {
+        type: 'choice',
+        level: '詮釋',
+        q: '課文第四段引用伽利略的名言，並再次提醒我們「以正向的心態面對逆境，化危機為轉機」。這段在議論文結構中主要發揮什麼作用？',
+        options: [
+          '提出一個全新的、跟前面無關的主題',
+          '補充說明拳擊比賽的計分與練習規則',
+          '介紹義大利科學家伽利略的生平故事',
+          '總結全文並「重申論點」，加深讀者印象'
+        ],
+        answer: 3, // D
+        hint: '議論文的最後一段，通常會把前面說過的道理再一次整理並強調，這叫做……？'
+      }
+    ]
+  },
+  {
+    id: 8,
+    act: 4,
+    env: 'sunset',
+    name: '第七關：心靈筆記寫作站',
+    para: '句型仿寫練習',
+    quest: '最終站：心靈寫作臺',
+    obj: '走到工坊右側的書桌旁，完成第一段的設問句型仿寫！',
+    prompt: '打開寫作學習單',
+    pos: new THREE.Vector3(3, 0, 2),
+    target: () => new THREE.Vector3(4, 1.4, -3.5),
+    area: {x0:-16, x1:16, z0:-14, z1:16},
+    text: '課文示範句：<em>「遇上困難，你會勇敢面對，還是選擇逃避？身處逆境，你會尋求突破，還是維持現狀？遇到失敗，你會奮戰再起，還是宣告放棄？」</em>',
+    isWriting: true
+  }
+];
+
+/* =========================================================
+   3. 狀態與存檔系統
+========================================================= */
+let G = {
+  started: false,
+  avatar: 'squirrel',
+  station: 0,
+  hp: 100,
+  sparks: Array(ST.length).fill(0),
+  mistakes: 0,
+  totalMistakes: 0,
+  cleared: new Set(),
+  unlocked: false,
+  writing: { name: '', s1: '', s2: '', checks: [false,false,false,false] }
+};
+
+function saveState(){
+  try{
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      avatar: G.avatar,
+      station: G.station,
+      hp: G.hp,
+      sparks: G.sparks,
+      totalMistakes: G.totalMistakes,
+      cleared: [...G.cleared],
+      unlocked: G.unlocked,
+      writing: G.writing
+    }));
+  }catch(e){}
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    const certs = JSON.parse(localStorage.getItem(CERT_KEY) || '[]');
+    if(certs.length > 0) G.unlocked = true;
+    if(!raw) return false;
+    const d = JSON.parse(raw);
+    if(d.avatar === 'squirrel' || d.avatar === 'warrior') G.avatar = d.avatar;
+    G.station = Math.min(d.station || 0, ST.length - 1);
+    G.hp = d.hp ?? 100;
+    G.sparks = Array.isArray(d.sparks) ? d.sparks : Array(ST.length).fill(0);
+    G.totalMistakes = d.totalMistakes || 0;
+    G.cleared = new Set(d.cleared || []);
+    if(d.unlocked) G.unlocked = true;
+    if(d.writing) G.writing = d.writing;
+    return true;
+  }catch(e){ return false; }
+}
+
+const totalSparks = () => G.sparks.reduce((a,b)=>a+b, 0);
+
+/* =========================================================
+   4. Three.js 場景、光影與 4 大程式化主題世界
+========================================================= */
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.92;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#87a8d0');
+scene.fog = new THREE.FogExp2('#c9d6e4', 0.015);
+
+const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.05, 400);
+camera.position.set(0, 1.65, 10);
+
+const hemiLight = new THREE.HemisphereLight('#cfe3ff', '#5e4b3c', 0.65);
+scene.add(hemiLight);
+
+const sunLight = new THREE.DirectionalLight('#fff0d6', 2.4);
+sunLight.position.set(18, 28, 16);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.set(1024, 1024);
+sunLight.shadow.camera.near = 2;
+sunLight.shadow.camera.far = 90;
+sunLight.shadow.camera.left = -26;
+sunLight.shadow.camera.right = 26;
+sunLight.shadow.camera.top = 26;
+sunLight.shadow.camera.bottom = -26;
+scene.add(sunLight);
+
+const ENVS = {
+  hutong: { bg:'#9ec2e6', fog:'#d8e2eb', fogD:0.014, sunC:'#fff2d8', sunI:2.4, hemiS:'#d7ebff', hemiG:'#6b5a48', exp:0.9 },
+  dawn:   { bg:'#d98f70', fog:'#e6b39a', fogD:0.016, sunC:'#ffc696', sunI:2.1, hemiS:'#ffd9c2', hemiG:'#483b4c', exp:0.88 },
+  field:  { bg:'#75bce8', fog:'#c7e6f5', fogD:0.008, sunC:'#ffffff', sunI:2.8, hemiS:'#e0f4ff', hemiG:'#7d6b4d', exp:0.92 },
+  sunset: { bg:'#66456b', fog:'#9e6b78', fogD:0.015, sunC:'#ffad66', sunI:2.2, hemiS:'#ffb88c', hemiG:'#3d2a2a', exp:0.95 }
+};
+
+let currentEnv = {...ENVS.hutong};
+let targetEnv = ENVS.hutong;
+function setEnv(name){
+  if(ENVS[name]) targetEnv = ENVS[name];
+}
+
+/* 輔助建構函式 */
+function makeMat(color, roughness=0.75, metalness=0.05, emissive=null, emissiveI=0){
+  const opts = { color, roughness, metalness };
+  if(emissive){ opts.emissive = emissive; opts.emissiveIntensity = emissiveI; }
+  return new THREE.MeshStandardMaterial(opts);
+}
+function addMesh(parent, geo, mat, x=0, y=0, z=0, rx=0, ry=0, rz=0, cast=true, recv=true){
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x,y,z);
+  m.rotation.set(rx,ry,rz);
+  m.castShadow = cast;
+  m.receiveShadow = recv;
+  parent.add(m);
+  return m;
+}
+
+/* 4 個獨立幕次群組 */
+const actGroups = { 1: new THREE.Group(), 2: new THREE.Group(), 3: new THREE.Group(), 4: new THREE.Group() };
+Object.values(actGroups).forEach(g => { g.visible = false; scene.add(g); });
+
+/* --- 第一幕：人生的十字路口 --- */
+function buildAct1(g){
+  // 草地與石板路
+  addMesh(g, new THREE.PlaneGeometry(70,70), makeMat('#5a8048', 0.9), 0,0,0, -Math.PI/2,0,0, false, true);
+  addMesh(g, new THREE.BoxGeometry(3.2, 0.08, 22), makeMat('#9c9488', 0.85), 0,0.04,4, 0,0,0, false, true);
+  // 左岔路（放棄）與右岔路（勇往直前）
+  addMesh(g, new THREE.BoxGeometry(2.6, 0.08, 14), makeMat('#7d766d', 0.85), -4.8,0.04,-9.5, 0, 0.42, 0, false, true);
+  addMesh(g, new THREE.BoxGeometry(2.6, 0.08, 14), makeMat('#b59f6b', 0.8), 4.8,0.04,-9.5, 0, -0.42, 0, false, true);
+
+  // 十字路口木頭路牌（未載入 Blender 模型時才繪製）
+  if(!window.EDU_MODELS || !window.EDU_MODELS.signpost){
+    const signPost = new THREE.Group();
+    signPost.position.set(0, 0, -5);
+    addMesh(signPost, new THREE.CylinderGeometry(0.14, 0.18, 3.2, 10), makeMat('#6b4423'), 0, 1.6, 0);
+    addMesh(signPost, new THREE.BoxGeometry(2.4, 0.55, 0.14), makeMat('#e8b954', 0.5), 0.7, 2.75, 0.1, 0, 0.15, 0.06);
+    addMesh(signPost, new THREE.BoxGeometry(2.2, 0.5, 0.14), makeMat('#6c757d', 0.8), -0.7, 2.15, -0.1, 0, -0.15, -0.05);
+    g.add(signPost);
+  }
+
+  // 周邊樹木與岩石
+  const treeCoords = [[-8,4],[-10,-3],[9,6],[11,-2],[-6,12],[8,11],[-12,-11],[12,-10]];
+  treeCoords.forEach(([x,z])=>{
+    addMesh(g, new THREE.CylinderGeometry(0.22,0.3,2.2,8), makeMat('#5c3d24'), x,1.1,z);
+    addMesh(g, new THREE.ConeGeometry(1.6,3.2,8), makeMat('#3b6e38'), x,3.2,z);
+    addMesh(g, new THREE.ConeGeometry(1.2,2.4,8), makeMat('#488244'), x,4.5,z);
+  });
+  // 引導石燈
+  [[-2.2, 4], [2.2, 4], [-2.2, -2], [2.2, -2]].forEach(([x,z])=>{
+    addMesh(g, new THREE.BoxGeometry(0.5, 1.2, 0.5), makeMat('#888c94'), x, 0.6, z);
+    addMesh(g, new THREE.SphereGeometry(0.22, 10, 10), makeMat('#ffdf8e', 0.3, 0, '#ffaa33', 1.4), x, 1.35, z, 0,0,0, false);
+  });
+}
+
+/* --- 第二幕：拳擊擂臺與榮耀之路 --- */
+function buildAct2(g){
+  addMesh(g, new THREE.PlaneGeometry(70,70), makeMat('#2b3344', 0.85), 0,0,0, -Math.PI/2,0,0, false, true);
+  // 拳擊擂臺（未載入 Blender 模型時才繪製）
+  if(!window.EDU_MODELS || !window.EDU_MODELS.boxing_ring){
+    const ring = new THREE.Group();
+    ring.position.set(0, 0, 0);
+    addMesh(ring, new THREE.BoxGeometry(8.5, 0.9, 8.5), makeMat('#39465e'), 0, 0.45, 0);
+    addMesh(ring, new THREE.BoxGeometry(7.8, 0.12, 7.8), makeMat('#3b73b9'), 0, 0.92, 0);
+    const corners = [[-3.8,-3.8],[3.8,-3.8],[3.8,3.8],[-3.8,3.8]];
+    corners.forEach(([x,z],i)=>{
+      const col = i%2===0 ? '#d94e4e' : '#3b73b9';
+      addMesh(ring, new THREE.CylinderGeometry(0.14,0.14,2.2,10), makeMat(col), x, 1.9, z);
+    });
+    [1.45, 1.95, 2.45].forEach(y=>{
+      addMesh(ring, new THREE.BoxGeometry(7.6, 0.06, 0.06), makeMat('#e6e6e6'), 0, y, -3.8);
+      addMesh(ring, new THREE.BoxGeometry(7.6, 0.06, 0.06), makeMat('#e6e6e6'), 0, y, 3.8);
+      addMesh(ring, new THREE.BoxGeometry(0.06, 0.06, 7.6), makeMat('#e6e6e6'), -3.8, y, 0);
+      addMesh(ring, new THREE.BoxGeometry(0.06, 0.06, 7.6), makeMat('#e6e6e6'), 3.8, y, 0);
+    });
+    g.add(ring);
+  }
+
+  // 三座奧運里程碑獎臺 (2016 里約 → 東京 → 2024 巴黎銅牌)
+  const podiums = [
+    {x:-4.5, z:-10, h:1.0, c:'#7d8597', medal:false},
+    {x:0,    z:-10, h:1.5, c:'#4e89ae', medal:false},
+    {x:4.5,  z:-10, h:2.0, c:'#cd7f32', medal:true}
+  ];
+  podiums.forEach(p=>{
+    addMesh(g, new THREE.BoxGeometry(2.4, p.h, 2.0), makeMat(p.c, 0.5), p.x, p.h/2, p.z);
+    addMesh(g, new THREE.CylinderGeometry(0.06,0.06,2.2,8), makeMat('#d4d8e0'), p.x, p.h+1.1, p.z-0.6);
+    addMesh(g, new THREE.BoxGeometry(1.4, 0.85, 0.08), makeMat(p.medal?'#e8b954':'#e3e7ef'), p.x+0.7, p.h+1.7, p.z-0.6);
+    if(p.medal){
+      // 閃耀銅牌
+      addMesh(g, new THREE.CylinderGeometry(0.45,0.45,0.1,20), makeMat('#d9823b', 0.25, 0.8, '#ff9a3c', 0.7), p.x, p.h+0.6, p.z, Math.PI/2,0,0);
+    }
+  });
+}
+
+/* --- 第三幕：植物生存生態區 --- */
+function buildAct3(g){
+  addMesh(g, new THREE.PlaneGeometry(80,80), makeMat('#688f52', 0.9), 0,0,0, -Math.PI/2,0,0, false, true);
+
+  // 1. 左區：沙漠仙人掌
+  addMesh(g, new THREE.CylinderGeometry(5.5, 6.0, 0.25, 24), makeMat('#e2c178', 0.92), -9, 0.12, -5);
+  if(!window.EDU_MODELS || !window.EDU_MODELS.cactus){
+    const cactus = new THREE.Group();
+    cactus.position.set(-9, 0.25, -5);
+    const cMat = makeMat('#3a8c47', 0.75);
+    addMesh(cactus, new THREE.CylinderGeometry(0.48, 0.55, 3.6, 12), cMat, 0, 1.8, 0);
+    addMesh(cactus, new THREE.SphereGeometry(0.48, 12, 12), cMat, 0, 3.6, 0);
+    addMesh(cactus, new THREE.CylinderGeometry(0.3, 0.32, 1.4, 10), cMat, -0.75, 2.2, 0, 0,0,0.4);
+    addMesh(cactus, new THREE.CylinderGeometry(0.28, 0.3, 1.1, 10), cMat, -1.15, 2.9, 0);
+    addMesh(cactus, new THREE.CylinderGeometry(0.3, 0.32, 1.2, 10), cMat, 0.75, 1.8, 0, 0,0,-0.4);
+    addMesh(cactus, new THREE.CylinderGeometry(0.28, 0.3, 1.0, 10), cMat, 1.12, 2.4, 0);
+    g.add(cactus);
+  }
+
+  // 2. 中區：秋冬落葉樹
+  addMesh(g, new THREE.CylinderGeometry(5.5, 6.0, 0.25, 24), makeMat('#8d6e4c', 0.9), 0, 0.12, -8);
+  if(!window.EDU_MODELS || !window.EDU_MODELS.autumn_tree){
+    addMesh(g, new THREE.CylinderGeometry(0.35, 0.55, 3.2, 10), makeMat('#5c4028'), 0, 1.6, -8);
+    addMesh(g, new THREE.CylinderGeometry(0.18, 0.25, 2.0, 8), makeMat('#5c4028'), -0.8, 3.2, -8, 0,0,0.6);
+    addMesh(g, new THREE.CylinderGeometry(0.18, 0.25, 2.0, 8), makeMat('#5c4028'), 0.8, 3.3, -8, 0,0,-0.6);
+    [[-1.2,3.8,-8],[1.1,4.0,-7.6],[0,4.4,-8.2]].forEach(([x,y,z])=>{
+      addMesh(g, new THREE.DodecahedronGeometry(0.55), makeMat('#e08e36', 0.8), x, y, z);
+    });
+  }
+  for(let i=0;i<14;i++){
+    const a = (i/14)*Math.PI*2;
+    addMesh(g, new THREE.BoxGeometry(0.28,0.03,0.18), makeMat(i%2?'#d97828':'#e8b954'), Math.cos(a)*2.3, 0.27, -8+Math.sin(a)*2.3, 0, a, 0);
+  }
+
+  // 3. 右區：沙灘椰子樹
+  addMesh(g, new THREE.CylinderGeometry(5.5, 6.0, 0.25, 24), makeMat('#f0d89e', 0.85), 9, 0.12, -5);
+  addMesh(g, new THREE.BoxGeometry(8, 0.08, 7), makeMat('#3a9ad9', 0.25, 0.1), 13.5, 0.06, -5, 0,0,0, false, true);
+  if(!window.EDU_MODELS || !window.EDU_MODELS.coconut_tree){
+    addMesh(g, new THREE.CylinderGeometry(0.24, 0.36, 4.4, 10), makeMat('#7d5a3c'), 8.6, 2.2, -5, 0, 0, -0.22);
+    for(let i=0;i<6;i++){
+      const ang = (i/6)*Math.PI*2;
+      addMesh(g, new THREE.BoxGeometry(2.2, 0.08, 0.65), makeMat('#489e48'), 9.1+Math.cos(ang)*1.0, 4.3, -5+Math.sin(ang)*1.0, 0.2, ang, -0.25);
+    }
+    [[8.9,3.95,-4.7],[9.3,3.95,-5.2],[8.7,0.4,-3.8]].forEach(([x,y,z])=>{
+      addMesh(g, new THREE.SphereGeometry(0.26, 10, 10), makeMat('#5e3b1f'), x, y, z);
+    });
+  }
+}
+
+/* --- 第四幕：鍛造工坊＆心靈寫作站 --- */
+function buildAct4(g){
+  addMesh(g, new THREE.PlaneGeometry(70,70), makeMat('#3d3530', 0.9), 0,0,0, -Math.PI/2,0,0, false, true);
+  // 石砌工坊地板
+  addMesh(g, new THREE.BoxGeometry(16, 0.15, 14), makeMat('#5c5550', 0.85), 0, 0.07, -1, 0,0,0, false, true);
+
+  // 左側：鍛造爐與鐵砧（未載入 Blender 模型時才繪製）
+  if(!window.EDU_MODELS || !window.EDU_MODELS.forge_set){
+    const forge = new THREE.Group();
+    forge.position.set(-2.5, 0.15, -1);
+    addMesh(forge, new THREE.BoxGeometry(2.6, 2.4, 2.0), makeMat('#6e6863'), -2.2, 1.2, -2);
+    addMesh(forge, new THREE.BoxGeometry(1.4, 0.7, 0.8), makeMat('#ff5511', 0.3, 0, '#ff6600', 2.0), -2.2, 1.1, -1.2, 0,0,0, false);
+    addMesh(forge, new THREE.BoxGeometry(1.0, 0.7, 0.7), makeMat('#474c54', 0.4, 0.6), 0.5, 0.35, 1.0);
+    addMesh(forge, new THREE.BoxGeometry(1.4, 0.45, 0.6), makeMat('#2f343b', 0.35, 0.75), 0.5, 0.9, 1.0);
+    addMesh(forge, new THREE.BoxGeometry(0.45, 0.16, 0.25), makeMat('#ff8833', 0.3, 0.2, '#ff5500', 1.6), 0.5, 1.2, 1.0);
+    g.add(forge);
+  }
+
+  // 右側：心靈寫作書桌
+  const desk = new THREE.Group();
+  desk.position.set(4, 0.15, -3.5);
+  addMesh(desk, new THREE.BoxGeometry(2.4, 0.12, 1.3), makeMat('#8c5a32'), 0, 0.95, 0);
+  [[-1.0,-0.5],[1.0,-0.5],[-1.0,0.5],[1.0,0.5]].forEach(([x,z])=>{
+    addMesh(desk, new THREE.BoxGeometry(0.12, 0.95, 0.12), makeMat('#5c3a1e'), x, 0.47, z);
+  });
+  // 書本與發光檯燈
+  addMesh(desk, new THREE.BoxGeometry(0.7, 0.06, 0.5), makeMat('#faf3e0'), -0.2, 1.04, 0.1, 0, 0.1, 0);
+  addMesh(desk, new THREE.CylinderGeometry(0.06, 0.16, 0.55, 10), makeMat('#d4af37', 0.3, 0.6), 0.75, 1.25, -0.3);
+  addMesh(desk, new THREE.ConeGeometry(0.28, 0.3, 12), makeMat('#ffe4a3', 0.4, 0, '#ffbb55', 1.2), 0.75, 1.55, -0.3, 0,0,0, false);
+  g.add(desk);
+}
+
+setLoad(40, '正在打造四幕立體場景與 Blender 模型…');
+buildAct1(actGroups[1]);
+buildAct2(actGroups[2]);
+buildAct3(actGroups[3]);
+buildAct4(actGroups[4]);
+
+/* 載入 Blender 匯出的 GLB 模型（來自 output/models.js） */
+const gltfLoader = new GLTFLoader();
+const LOADED_MODELS = {};
+function loadGlb(name){
+  return new Promise(resolve => {
+    const uri = window.EDU_MODELS && window.EDU_MODELS[name];
+    if(!uri){ resolve(null); return; }
+    gltfLoader.load(uri, gltf => {
+      gltf.scene.traverse(n => {
+        if(n.isMesh){ n.castShadow = true; n.receiveShadow = true; n.frustumCulled = false; }
+      });
+      resolve(gltf);
+    }, undefined, () => resolve(null));
+  });
+}
+
+/* 掛載 Blender 美化地標 */
+(async function mountBlenderLandmarks(){
+  const landmarks = [
+    { name:'signpost', act:1, pos:[0,0,-5], rotY:0, scale:1.15 },
+    { name:'boxing_ring', act:2, pos:[0,0,0], rotY:0, scale:1.0 },
+    { name:'cactus', act:3, pos:[-9,0,-5], rotY:0.3, scale:1.1 },
+    { name:'autumn_tree', act:3, pos:[0,0,-8], rotY:0, scale:1.15 },
+    { name:'coconut_tree', act:3, pos:[9,0,-5], rotY:-0.4, scale:1.1 },
+    { name:'forge_set', act:4, pos:[-2.5,0.15,-1], rotY:0.2, scale:1.1 }
+  ];
+  for(const lm of landmarks){
+    const gltf = await loadGlb(lm.name);
+    if(gltf){
+      const obj = gltf.scene;
+      obj.position.set(...lm.pos);
+      obj.rotation.y = lm.rotY;
+      obj.scale.setScalar(lm.scale);
+      actGroups[lm.act].add(obj);
+    }
+  }
+})();
+
+/* 動態氛圍粒子（第四幕火星、第三幕落葉） */
+const particles = [];
+const sparkMat = makeMat('#ff8833', 0.3, 0, '#ff5500', 2.0);
+for(let i=0;i<18;i++){
+  const p = addMesh(actGroups[4], new THREE.SphereGeometry(0.05, 6, 6), sparkMat, -4.2+(Math.random()-0.5)*1.2, 0.8+Math.random()*2.5, -2.0+(Math.random()-0.5)*1.0, 0,0,0, false, false);
+  p.userData = { speed: 0.6 + Math.random()*0.9, baseX: p.position.x };
+  particles.push(p);
+}
+
+/* 主角第三人稱實體與動畫混合器 */
+const playerGroup = new THREE.Group();
+scene.add(playerGroup);
+const torchLight = new THREE.PointLight('#ff9944', 0, 9);
+torchLight.position.set(0.4, 1.4, -0.4);
+playerGroup.add(torchLight);
+
+let mixer = null, actIdle = null, actWalk = null, currentAnim = 'Idle';
+async function setAvatar(type){
+  G.avatar = type;
+  // 清空舊模型（保留 torchLight）
+  for(let i=playerGroup.children.length-1; i>=0; i--){
+    if(playerGroup.children[i] !== torchLight) playerGroup.remove(playerGroup.children[i]);
+  }
+  mixer = null; actIdle = null; actWalk = null;
+  torchLight.intensity = (type === 'warrior') ? 2.6 : 0;
+
+  let gltf = LOADED_MODELS[type];
+  if(!gltf){
+    gltf = await loadGlb(type);
+    if(gltf) LOADED_MODELS[type] = gltf;
+  }
+  if(gltf){
+    const model = gltf.scene;
+    model.scale.setScalar(1.05);
+    playerGroup.add(model);
+    if(gltf.animations && gltf.animations.length > 0){
+      mixer = new THREE.AnimationMixer(model);
+      const cIdle = gltf.animations.find(a=>a.name==='Idle') || gltf.animations[0];
+      const cWalk = gltf.animations.find(a=>a.name==='Walk') || gltf.animations[1] || cIdle;
+      actIdle = mixer.clipAction(cIdle);
+      actWalk = mixer.clipAction(cWalk);
+      actIdle.play();
+      currentAnim = 'Idle';
+    }
+  } else {
+    // 備援程式化簡易主角
+    addMesh(playerGroup, new THREE.CylinderGeometry(0.28,0.32,1.1,10), makeMat(type==='warrior'?'#3b6998':'#c86d3b'), 0, 0.55, 0);
+    addMesh(playerGroup, new THREE.SphereGeometry(0.26,12,12), makeMat('#f5d0b5'), 0, 1.35, 0);
+  }
+  // 同步入口卡片狀態
+  document.querySelectorAll('.avatar-card').forEach(c => {
+    c.classList.toggle('active', c.dataset.av === type);
+  });
+}
+
+/* 目標光柱與懸浮菱形指標 */
+const beacon = new THREE.Group();
+const beaconRing = addMesh(beacon, new THREE.RingGeometry(0.85, 1.15, 24), makeMat('#e8b954', 0.3, 0, '#e8b954', 1.2), 0, 0.08, 0, -Math.PI/2,0,0, false, false);
+const beaconDiamond = addMesh(beacon, new THREE.OctahedronGeometry(0.45, 0), makeMat('#ffdf8e', 0.2, 0.3, '#e8b954', 1.4), 0, 2.3, 0, 0,0,0, false, false);
+scene.add(beacon);
+
+/* =========================================================
+   5. 玩家移動、視角控制與觸控搖桿
+========================================================= */
+const P = { pos: new THREE.Vector3(0, 0, 10), yaw: 0, pitch: 0.22, speed: 6.0 };
+const K = { w:false, s:false, a:false, d:false, joyX:0, joyY:0 };
+
+window.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if(k==='w'||e.key==='ArrowUp') K.w = true;
+  if(k==='s'||e.key==='ArrowDown') K.s = true;
+  if(k==='a'||e.key==='ArrowLeft') K.a = true;
+  if(k==='d'||e.key==='ArrowRight') K.d = true;
+});
+window.addEventListener('keyup', e => {
+  const k = e.key.toLowerCase();
+  if(k==='w'||e.key==='ArrowUp') K.w = false;
+  if(k==='s'||e.key==='ArrowDown') K.s = false;
+  if(k==='a'||e.key==='ArrowLeft') K.a = false;
+  if(k==='d'||e.key==='ArrowRight') K.d = false;
+});
+
+/* 滑鼠/觸控拖曳轉動視角 */
+let dragging = false, lastX = 0, lastY = 0;
+canvas.addEventListener('pointerdown', e => {
+  if(e.target !== canvas) return;
+  dragging = true; lastX = e.clientX; lastY = e.clientY;
+});
+window.addEventListener('pointermove', e => {
+  if(!dragging) return;
+  const dx = e.clientX - lastX, dy = e.clientY - lastY;
+  lastX = e.clientX; lastY = e.clientY;
+  P.yaw -= dx * 0.0045;
+  P.pitch = Math.max(-0.55, Math.min(0.45, P.pitch - dy * 0.0035));
+});
+window.addEventListener('pointerup', () => dragging = false);
+
+/* 觸控類比搖桿 */
+const pad = document.getElementById('pad');
+const padKnob = document.getElementById('padKnob');
+let padTouchId = null;
+pad.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.changedTouches[0];
+  padTouchId = t.identifier;
+  updatePad(t);
+}, {passive:false});
+pad.addEventListener('touchmove', e => {
+  e.preventDefault();
+  for(const t of e.changedTouches){
+    if(t.identifier === padTouchId) updatePad(t);
+  }
+}, {passive:false});
+pad.addEventListener('touchend', e => {
+  for(const t of e.changedTouches){
+    if(t.identifier === padTouchId){
+      padTouchId = null; K.joyX = 0; K.joyY = 0;
+      padKnob.style.transform = 'translate(-50%,-50%)';
+    }
+  }
+});
+function updatePad(t){
+  const r = pad.getBoundingClientRect();
+  const cx = r.left + r.width/2, cy = r.top + r.height/2;
+  const maxR = r.width/2 - 16;
+  let dx = t.clientX - cx, dy = t.clientY - cy;
+  const dist = Math.hypot(dx, dy);
+  if(dist > maxR){ dx = (dx/dist)*maxR; dy = (dy/dist)*maxR; }
+  padKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+  K.joyX = dx / maxR;
+  K.joyY = dy / maxR;
+}
+
+/* =========================================================
+   6. 站點切換、HUD 更新與互動邏輯
+========================================================= */
+function showToast(msg, ms=2400){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.style.display = 'none'; }, ms);
+}
+
+function updateHUD(){
+  document.getElementById('hpFill').style.width = `${Math.max(0, G.hp)}%`;
+  document.getElementById('hpNum').textContent = Math.max(0, G.hp);
+  document.getElementById('sparkCount').textContent = totalSparks();
+  const st = ST[G.station];
+  document.getElementById('actLabel').textContent = `第 ${st.act} 幕`;
+  document.getElementById('questTitle').textContent = st.quest;
+  document.getElementById('questObj').textContent = st.obj;
+  document.getElementById('btnInteract').textContent = st.prompt;
+}
+
+function enterStation(idx){
+  G.station = Math.max(0, Math.min(ST.length - 1, idx));
+  const st = ST[G.station];
+  Object.keys(actGroups).forEach(a => { actGroups[a].visible = (Number(a) === st.act); });
+  setEnv(st.env);
+  P.pos.set(st.pos.x, 0, st.pos.z);
+  const tgt = st.target();
+  P.yaw = Math.atan2(P.pos.x - tgt.x, P.pos.z - tgt.z);
+  P.pitch = 0.22;
+  playerGroup.position.copy(P.pos);
+  playerGroup.rotation.y = P.yaw;
+  beacon.position.set(tgt.x, 0, tgt.z);
+  updateHUD();
+  saveState();
+}
+
+/* =========================================================
+   7. 測驗、寫作站與證書系統
+========================================================= */
+const modalOverlay = document.getElementById('modalOverlay');
+const modalCard = document.getElementById('modalCard');
+
+function closeModal(){ modalOverlay.style.display = 'none'; }
+
+function interact(){
+  AU.click();
+  const st = ST[G.station];
+  if(st.isWriting){ openWritingStation(st); return; }
+  openStoryDialog(st);
+}
+
+function openStoryDialog(st){
+  modalOverlay.style.display = 'flex';
+  modalCard.innerHTML = `
+    <div class="modal-head">
+      <h2 class="modal-title">${st.name}</h2>
+      <span class="modal-tag">${st.para}</span>
+    </div>
+    <div class="story-text">${st.text}</div>
+    <div class="btn-row" style="justify-content:flex-end;">
+      <button class="btn btn-secondary btn-small" id="mClose">稍後再看</button>
+      <button class="btn btn-primary" id="mNext">${st.dialogBtn || '開始挑戰'}</button>
+    </div>
+  `;
+  document.getElementById('mClose').onclick = closeModal;
+  document.getElementById('mNext').onclick = () => {
+    AU.click();
+    if(st.kind === 'story'){
+      G.cleared.add(st.id);
+      closeModal();
+      if(G.station + 1 < ST.length){
+        enterStation(G.station + 1);
+        showToast(`已進入：${ST[G.station].name}`);
+      }
+    } else {
+      G.mistakes = 0;
+      runStep(st, 0);
+    }
+  };
+}
+
+function hurt(st, hintMsg){
+  AU.wrong();
+  G.hp = Math.max(0, G.hp - 20);
+  G.mistakes++;
+  G.totalMistakes++;
+  updateHUD();
+  if(G.hp <= 0){
+    showToast('專注體力歸零，將為你補充體力並重新挑戰本關！', 3200);
+    G.hp = 100;
+    G.mistakes = 0;
+    updateHUD();
+    setTimeout(()=>openStoryDialog(st), 800);
+    return false;
+  }
+  const hb = document.getElementById('hintBox');
+  if(hb){ hb.textContent = `💡 課文線索：${hintMsg}`; hb.style.display = 'block'; }
+  return true;
+}
+
+function finishStation(st){
+  AU.clear();
+  const earned = Math.max(1, 3 - G.mistakes);
+  G.sparks[st.id] = Math.max(G.sparks[st.id], earned);
+  G.cleared.add(st.id);
+  G.hp = Math.min(100, G.hp + 20);
+  updateHUD();
+  saveState();
+
+  modalCard.innerHTML = `
+    <div class="modal-head">
+      <h2 class="modal-title">過關成功！</h2>
+      <span class="modal-tag">${st.name}</span>
+    </div>
+    <div class="story-text" style="text-align:center;">
+      太棒了！你完成了本關的所有閱讀挑戰。<br>
+      獲得勇氣火花：<strong style="color:var(--gold);font-size:22px;">+${earned} ★</strong>
+    </div>
+    <div class="btn-row" style="justify-content:center;">
+      <button class="btn btn-primary" id="mProceed">前往下一站</button>
+    </div>
+  `;
+  document.getElementById('mProceed').onclick = () => {
+    AU.click();
+    closeModal();
+    if(G.station + 1 < ST.length) enterStation(G.station + 1);
+  };
+}
+
+function runStep(st, idx){
+  if(idx >= st.steps.length){ finishStation(st); return; }
+  const q = st.steps[idx];
+  const letters = ['A','B','C','D','E','F'];
+  let bodyHtml = '';
+
+  if(q.type === 'choice'){
+    bodyHtml = `<div class="opt-list">${q.options.map((o,i)=>`<button class="opt-btn" data-i="${i}">${letters[i]}. ${o}</button>`).join('')}</div>`;
+  } else if(q.type === 'tf'){
+    bodyHtml = `<div class="opt-list"><button class="opt-btn" data-v="true">O 正確</button><button class="opt-btn" data-v="false">X 錯誤</button></div>`;
+  } else if(q.type === 'multi'){
+    bodyHtml = `<div class="opt-list">${q.options.map((o,i)=>`<button class="opt-btn" data-i="${i}">☐ ${o}</button>`).join('')}</div>
+    <button class="btn btn-primary" id="btnSubmit">送出答案</button>`;
+  } else if(q.type === 'fill'){
+    const parts = q.sentence.split('＿');
+    bodyHtml = `<div class="fill-box">${parts[0]}<span class="fill-blank" id="fillBlank">＿</span>${parts[1]}</div>
+    <div class="tile-row">${q.tiles.map(t=>`<button class="tile-btn" data-t="${t}">${t}</button>`).join('')}</div>
+    <button class="btn btn-primary" id="btnSubmit">送出答案</button>`;
+  } else if(q.type === 'order'){
+    const shuffled = [...q.items].sort(()=>Math.random()-0.5);
+    if(shuffled.every((v,i)=>v===q.items[i])) shuffled.reverse();
+    bodyHtml = `<div style="font-size:13px;color:var(--gold);margin-bottom:6px;">▲ ${q.labels[0]}</div>
+    <div id="orderList">${shuffled.map((it,i)=>`<div class="order-item" data-val="${it}"><span>${i+1}. ${it}</span><span class="order-arrows"><button class="mini-btn up">↑</button><button class="mini-btn dn">↓</button></span></div>`).join('')}</div>
+    <div style="font-size:13px;color:var(--gold);margin-bottom:12px;">▼ ${q.labels[1]}</div>
+    <button class="btn btn-primary" id="btnSubmit">送出順序</button>`;
+  } else if(q.type === 'match'){
+    const opts = [...q.cards].sort(()=>Math.random()-0.5);
+    bodyHtml = `<div class="match-grid">${q.zones.map((z,zi)=>`
+      <div class="match-row">
+        <strong>${z}</strong>
+        <select class="match-select" data-zone="${z}">
+          <option value="">-- 請選擇對應的敘述 --</option>
+          ${opts.map(c=>`<option value="${c}">${c}</option>`).join('')}
+        </select>
+      </div>`).join('')}</div>
+    <button class="btn btn-primary" id="btnSubmit">送出配對</button>`;
+  }
+
+  modalCard.innerHTML = `
+    <div class="modal-head">
+      <h2 class="modal-title">${st.name}（第 ${idx+1}/${st.steps.length} 題）</h2>
+      <span class="modal-tag">PIRLS：${q.level}</span>
+    </div>
+    <div class="q-text">${q.q}</div>
+    ${bodyHtml}
+    <div class="hint-box" id="hintBox"></div>
+    <div class="ok-box" id="okBox">答對了！</div>
+  `;
+
+  const pass = () => {
+    AU.correct();
+    document.getElementById('okBox').style.display = 'block';
+    setTimeout(()=>runStep(st, idx+1), 650);
+  };
+
+  if(q.type === 'choice'){
+    modalCard.querySelectorAll('.opt-btn').forEach(b => b.onclick = () => {
+      const i = Number(b.dataset.i);
+      if(i === q.answer){ b.classList.add('correct'); pass(); }
+      else { b.classList.add('wrong'); hurt(st, q.hint); }
+    });
+  } else if(q.type === 'tf'){
+    modalCard.querySelectorAll('.opt-btn').forEach(b => b.onclick = () => {
+      const v = b.dataset.v === 'true';
+      if(v === q.answer){ b.classList.add('correct'); pass(); }
+      else { b.classList.add('wrong'); hurt(st, q.hint); }
+    });
+  } else if(q.type === 'multi'){
+    const sel = new Set();
+    modalCard.querySelectorAll('.opt-btn').forEach(b => b.onclick = () => {
+      AU.click();
+      const i = Number(b.dataset.i);
+      if(sel.has(i)){ sel.delete(i); b.classList.remove('selected'); b.textContent = '☐ ' + q.options[i]; }
+      else { sel.add(i); b.classList.add('selected'); b.textContent = '☑ ' + q.options[i]; }
+    });
+    document.getElementById('btnSubmit').onclick = () => {
+      const arr = [...sel].sort((a,b)=>a-b);
+      if(JSON.stringify(arr) === JSON.stringify(q.answer)) pass();
+      else hurt(st, q.hint);
+    };
+  } else if(q.type === 'fill'){
+    let picked = '';
+    modalCard.querySelectorAll('.tile-btn').forEach(b => b.onclick = () => {
+      AU.click();
+      modalCard.querySelectorAll('.tile-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      picked = b.dataset.t;
+      document.getElementById('fillBlank').textContent = picked;
+    });
+    document.getElementById('btnSubmit').onclick = () => {
+      if(!picked){ showToast('請先點選一個詞語！'); return; }
+      if(picked === q.answer) pass();
+      else hurt(st, q.hint);
+    };
+  } else if(q.type === 'order'){
+    const list = document.getElementById('orderList');
+    const refreshNum = () => [...list.children].forEach((el,i)=>{ el.querySelector('span').textContent = `${i+1}. ${el.dataset.val}`; });
+    list.onclick = e => {
+      const item = e.target.closest('.order-item');
+      if(!item) return;
+      if(e.target.classList.contains('up') && item.previousElementSibling){ list.insertBefore(item, item.previousElementSibling); AU.click(); refreshNum(); }
+      if(e.target.classList.contains('dn') && item.nextElementSibling){ list.insertBefore(item.nextElementSibling, item); AU.click(); refreshNum(); }
+    };
+    document.getElementById('btnSubmit').onclick = () => {
+      const cur = [...list.children].map(el=>el.dataset.val);
+      if(JSON.stringify(cur) === JSON.stringify(q.items)) pass();
+      else hurt(st, q.hint);
+    };
+  } else if(q.type === 'match'){
+    document.getElementById('btnSubmit').onclick = () => {
+      const selects = [...modalCard.querySelectorAll('.match-select')];
+      if(selects.some(s=>!s.value)){ showToast('請完成所有配對後再送出！'); return; }
+      const ok = selects.every(s => q.answer[s.dataset.zone] === s.value);
+      if(ok) pass();
+      else hurt(st, q.hint);
+    };
+  }
+}
+
+/* =========================================================
+   8. 句型仿寫寫作站（方案 A：百寶箱 + 自評 + 一鍵複製）
+========================================================= */
+function openWritingStation(st){
+  modalOverlay.style.display = 'flex';
+  const w = G.writing;
+  modalCard.innerHTML = `
+    <div class="modal-head">
+      <h2 class="modal-title">${st.name}</h2>
+      <span class="modal-tag">句型仿寫練習</span>
+    </div>
+    <div class="writing-guide">
+      <strong>課文示範：</strong>「遇上困難，你會勇敢面對，還是選擇逃避？身處逆境，你會尋求突破，還是維持現狀？」<br>
+      <strong>句型公式：</strong><span style="color:var(--gold);">（遇到什麼狀況），你會（積極做法），還是（消極做法）？</span>
+    </div>
+
+    <button class="toolbox-btn" id="btnToolbox">💡 點我看「寫作百寶箱」提示詞彙</button>
+    <div class="toolbox-panel" id="toolboxPanel">
+      <div><strong>情境參考：</strong></div>
+      <div class="chip-group">
+        <span class="chip">考試沒考好</span><span class="chip">比賽輸了</span><span class="chip">和朋友吵架</span><span class="chip">功課寫不出來</span><span class="chip">學騎車跌倒</span>
+      </div>
+      <div><strong>積極做法：</strong></div>
+      <div class="chip-group">
+        <span class="chip">找出錯題訂正</span><span class="chip">檢討並繼續練習</span><span class="chip">主動溝通道歉</span><span class="chip">請教老師同學</span><span class="chip">拍拍灰塵再試一次</span>
+      </div>
+      <div><strong>消極做法：</strong></div>
+      <div class="chip-group">
+        <span class="chip">把考卷藏起來</span><span class="chip">生氣不玩了</span><span class="chip">賭氣不說話</span><span class="chip">隨便寫交差</span><span class="chip">害怕不敢再試</span>
+      </div>
+    </div>
+
+    <label style="font-size:14px;font-weight:700;">學生姓名（製作證書用）：</label>
+    <input type="text" id="wName" class="w-input" style="min-height:40px;margin-top:4px;" placeholder="請輸入你的名字（例如：王小明）" value="${w.name}">
+
+    <label style="font-size:14px;font-weight:700;">仿寫第一句（必填）：</label>
+    <textarea id="wS1" class="w-input" placeholder="例：考試沒考好，你會找出錯題訂正，還是把考卷藏起來？">${w.s1}</textarea>
+
+    <label style="font-size:14px;font-weight:700;">仿寫第二句（選填，多寫一句更棒！）：</label>
+    <textarea id="wS2" class="w-input" placeholder="例：比賽落後，你會咬緊牙關追分，還是直接放棄比賽？">${w.s2}</textarea>
+
+    <div style="font-size:14px;font-weight:700;color:var(--gold);">自我檢核表（完成後請打勾）：</div>
+    <div class="check-list">
+      <label class="check-item"><input type="checkbox" class="w-chk" ${w.checks[0]?'checked':''}> 我有寫出一個具體的困難情境</label>
+      <label class="check-item"><input type="checkbox" class="w-chk" ${w.checks[1]?'checked':''}> 我有使用「……，你會……，還是……？」的句型</label>
+      <label class="check-item"><input type="checkbox" class="w-chk" ${w.checks[2]?'checked':''}> 兩個選擇有形成對比（一個積極、一個消極）</label>
+      <label class="check-item"><input type="checkbox" class="w-chk" ${w.checks[3]?'checked':''}> 句尾有加上問號「？」</label>
+    </div>
+
+    <div class="btn-row" style="justify-content:space-between;">
+      <button class="btn btn-secondary btn-small" id="btnCopyWork">📋 一鍵複製學習單</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary btn-small" id="mClose">先存草稿</button>
+        <button class="btn btn-primary" id="btnFinishWriting">完成並領取證書</button>
+      </div>
+    </div>
+  `;
+
+  const saveWriting = () => {
+    G.writing = {
+      name: document.getElementById('wName').value.trim(),
+      s1: document.getElementById('wS1').value.trim(),
+      s2: document.getElementById('wS2').value.trim(),
+      checks: [...modalCard.querySelectorAll('.w-chk')].map(c=>c.checked)
+    };
+    saveState();
+  };
+
+  document.getElementById('btnToolbox').onclick = () => {
+    const p = document.getElementById('toolboxPanel');
+    p.style.display = p.style.display === 'block' ? 'none' : 'block';
+  };
+  modalCard.querySelectorAll('.chip').forEach(ch => ch.onclick = () => {
+    const box = document.getElementById('wS1');
+    box.value += (box.value ? '' : '') + ch.textContent;
+    saveWriting();
+  });
+
+  document.getElementById('mClose').onclick = () => { saveWriting(); closeModal(); };
+
+  document.getElementById('btnCopyWork').onclick = async () => {
+    saveWriting();
+    const txt = `【第九課〈在挫折中成長〉句型仿寫學習單】\n學生姓名：${G.writing.name || '未填寫'}\n閱讀測驗勇氣火花：${totalSparks()} / 18\n仿寫句 1：${G.writing.s1 || '（未填寫）'}\n仿寫句 2：${G.writing.s2 || '（無）'}`;
+    try{
+      await navigator.clipboard.writeText(txt);
+      showToast('已複製學習單內容！可以貼到作業區繳交囉。');
+    }catch(e){
+      showToast('複製失敗，請手動選取文字複製。');
+    }
+  };
+
+  document.getElementById('btnFinishWriting').onclick = () => {
+    saveWriting();
+    if(!G.writing.name){ showToast('請先輸入你的名字！'); return; }
+    if(!G.writing.s1 || G.writing.s1.length < 8){ showToast('請先完成「仿寫第一句」再送出喔！'); return; }
+    G.cleared.add(st.id);
+    G.unlocked = true;
+    saveState();
+    AU.clear();
+    openCertificateModal(G.writing.name);
+  };
+}
+
+/* =========================================================
+   9. 電子學習證書（1200x840 Canvas）
+========================================================= */
+function openCertificateModal(studentName){
+  const sparks = totalSparks();
+  const ratio = sparks / 18;
+  let rank = '勇氣探索者';
+  if(ratio >= 0.9) rank = '挫折鍛造大師';
+  else if(ratio >= 0.7) rank = '堅毅成長達人';
+  else if(ratio >= 0.45) rank = '逆境挑戰小尖兵';
+
+  const today = new Date().toLocaleDateString('zh-TW');
+  modalOverlay.style.display = 'flex';
+  modalCard.innerHTML = `
+    <div class="modal-head">
+      <h2 class="modal-title">恭喜完成第九課學習評量！</h2>
+      <span class="modal-tag">${rank}</span>
+    </div>
+    <canvas id="certCanvas" width="1200" height="840"></canvas>
+    <div class="btn-row" style="justify-content:space-between;">
+      <button class="btn btn-secondary" id="btnCloseCert">返回園區自由探索</button>
+      <button class="btn btn-primary" id="btnDownloadCert">下載電子學習證書</button>
+    </div>
+  `;
+
+  const c = document.getElementById('certCanvas');
+  const ctx = c.getContext('2d');
+  // 證書底圖
+  ctx.fillStyle = '#fdf8ec'; ctx.fillRect(0,0,1200,840);
+  ctx.strokeStyle = '#c89b3c'; ctx.lineWidth = 18; ctx.strokeRect(30,30,1140,780);
+  ctx.strokeStyle = '#e8b954'; ctx.lineWidth = 4; ctx.strokeRect(54,54,1092,732);
+
+  ctx.fillStyle = '#3c2e1e'; ctx.textAlign = 'center';
+  ctx.font = 'bold 48px "PingFang TC","Microsoft JhengHei",sans-serif';
+  ctx.fillText('國語五年級・數位閱讀與寫作學習證書', 600, 150);
+
+  ctx.fillStyle = '#8b6f47';
+  ctx.font = '28px "PingFang TC","Microsoft JhengHei",sans-serif';
+  ctx.fillText('第九課〈在挫折中成長〉3D 沉浸式評量', 600, 205);
+
+  ctx.fillStyle = '#1f2937';
+  ctx.font = 'bold 60px "PingFang TC","Microsoft JhengHei",sans-serif';
+  ctx.fillText(studentName, 600, 325);
+
+  ctx.font = '30px "PingFang TC","Microsoft JhengHei",sans-serif';
+  ctx.fillStyle = '#374151';
+  ctx.fillText(`完成全課四幕探索、19 題閱讀與結構理解及句型仿寫挑戰`, 600, 415);
+
+  ctx.fillStyle = '#b45309';
+  ctx.font = 'bold 36px "PingFang TC","Microsoft JhengHei",sans-serif';
+  ctx.fillText(`榮獲稱號：【${rank}】`, 600, 490);
+  ctx.fillText(`收集勇氣火花：${sparks} / 18 ★`, 600, 548);
+
+  if(G.writing.s1){
+    ctx.fillStyle = '#4b5563';
+    ctx.font = '22px "PingFang TC","Microsoft JhengHei",sans-serif';
+    const preview = G.writing.s1.length > 36 ? G.writing.s1.slice(0,36)+'…' : G.writing.s1;
+    ctx.fillText(`仿寫佳句：「${preview}」`, 600, 620);
+  }
+
+  ctx.fillStyle = '#6b7280';
+  ctx.font = '24px "PingFang TC","Microsoft JhengHei",sans-serif';
+  ctx.fillText(`頒發日期：${today}`, 600, 725);
+
+  // 朱印
+  ctx.strokeStyle = '#c0392b'; ctx.lineWidth = 5; ctx.strokeRect(940, 630, 120, 120);
+  ctx.fillStyle = '#c0392b'; ctx.font = 'bold 28px serif';
+  ctx.fillText('學習', 1000, 682); ctx.fillText('認證', 1000, 722);
+
+  try{
+    const list = JSON.parse(localStorage.getItem(CERT_KEY) || '[]');
+    list.unshift({name: studentName, rank, sparks, date: today});
+    localStorage.setItem(CERT_KEY, JSON.stringify(list.slice(0, 30)));
+  }catch(e){}
+
+  document.getElementById('btnDownloadCert').onclick = () => {
+    const a = document.createElement('a');
+    a.download = `${studentName}-第九課學習證書.png`;
+    a.href = c.toDataURL('image/png');
+    a.click();
+  };
+  document.getElementById('btnCloseCert').onclick = closeModal;
+}
+
+/* =========================================================
+   10. 右側選單功能（站別一覽、課文回顧、說明、音效）
+========================================================= */
+document.getElementById('btnMap').onclick = () => {
+  AU.click();
+  modalOverlay.style.display = 'flex';
+  modalCard.innerHTML = `
+    <div class="modal-head">
+      <h2 class="modal-title">站別一覽與快速移動</h2>
+      <span class="modal-tag">${G.unlocked ? '已全部解鎖' : '依序解鎖中'}</span>
+    </div>
+    <div class="station-list">
+      ${ST.map((s,i)=>{
+        const canGo = G.unlocked || i <= G.station || G.cleared.has(i) || G.cleared.has(i-1);
+        return `<button class="st-card ${G.cleared.has(i)?'cleared':''} ${!canGo?'locked':''}" data-go="${i}" ${!canGo?'disabled':''}>
+          <div style="font-size:12px;color:var(--gold);">第 ${s.act} 幕</div>
+          <div style="font-weight:700;margin:3px 0;">${s.name}</div>
+          <div style="font-size:12px;color:var(--muted);">${G.cleared.has(i)?'✓ 已完成':'點擊前往'}</div>
+        </button>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:10px;border-top:1px solid rgba(255,255,255,0.12);padding-top:12px;">
+      <input type="password" id="tPwd" placeholder="教師密碼解鎖全部站別" style="padding:7px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#141925;color:#fff;font-size:13px;">
+      <button class="btn btn-secondary btn-small" id="btnUnlock">解鎖</button>
+      <button class="btn btn-primary btn-small" id="mClose" style="margin-left:auto;">關閉</button>
+    </div>
+  `;
+  modalCard.querySelectorAll('.st-card').forEach(b => b.onclick = () => {
+    const idx = Number(b.dataset.go);
+    closeModal();
+    enterStation(idx);
+  });
+  document.getElementById('btnUnlock').onclick = () => {
+    if(document.getElementById('tPwd').value.trim() === 'ijun'){
+      G.unlocked = true; saveState(); showToast('教師解鎖成功！全站別已開放。');
+      document.getElementById('btnMap').click();
+    } else showToast('密碼不正確');
+  };
+  document.getElementById('mClose').onclick = closeModal;
+};
+
+document.getElementById('btnText').onclick = () => {
+  AU.click();
+  modalOverlay.style.display = 'flex';
+  modalCard.innerHTML = `
+    <div class="modal-head"><h2 class="modal-title">課文全文回顧：九、在挫折中成長</h2><span class="modal-tag">楊裕貿</span></div>
+    <div class="story-text" style="max-height:58vh;overflow-y:auto;">
+      <p>遇上困難，你會勇敢面對，還是選擇逃避？身處逆境，你會尋求突破，還是維持現狀？遇到失敗，你會奮戰再起，還是宣告放棄？人生的道路上往往崎嶇不平，甚至困境重重，只有在每一次的挫折中勇往直前，接受困境的考驗，才能磨練出堅強的意志。</p>
+      <p>臺灣第一位進軍奧運的女子拳擊手陳念琴，在西元二○一六年滿懷希望踏上巴西 里約的奧運舞臺，沒想到卻在十六強止步。一直以來，她比誰都認真練習，也因此，她比誰都更加失落。這次的挫折讓她陷入低潮，但她慢慢調適心情，接受失敗的事實，並相信自己能東山再起，開始全力為東京 奧運備戰。正當狀態越來越好時，她卻不幸得到癌症，圓夢路上再度遇到打擊。治療的副作用讓她的體能變差，她仍堅持不斷的訓練，雖然最後在八強落敗，但她已經找回當初的自信。二○二四年的夏天，她三度參加奧運，終於在巴黎 奧運獲得銅牌。陳念琴的拳擊之路屢屢遇到困境，她卻能一一克服困難的考驗，將挫折化為前進的動力，勇敢的成長，創造出自己的成就。</p>
+      <p>沙漠中的仙人掌，為了對抗高溫又缺水的環境，發展出肥厚的莖存放水分，葉片也演化為針刺狀來降低水分蒸發。有些落葉樹種為適應低溫，往往會在秋冬時節落葉，減少樹葉消耗養分，將能量存起來，以待開春時節給予幼芽養分。沙灘上椰子樹掉落的椰子，常被潮水帶進海裡，漂流的過程可能長達數月，還好靠著厚厚的外皮保護，種子即使泡在海水也不會腐爛。只要被海浪沖上了沙灘，就可以生根發芽。自然界中的植物無法像動物一樣自由移動，如果遇到環境或氣候的改變，生存的衝擊就隨之而來。面對這些困境，植物卻能在地球存活超過三十億年，靠的就是接受環境給予的挫折，進而調適改變自己，讓自身能在酷熱、嚴寒和缺水的逆境中生存下來。</p>
+      <p>義大利科學家伽利略說：「生命如鍛造的鐵塊，愈被敲打，愈能發出火花。」既然人生充滿考驗，當挫折來臨時，可以接受挫折的敲擊鍛鍊，以正向的心態面對逆境，從中發現自己的不足，並尋求解決問題的方法。如此，才能化危機為轉機並調整自己，進而成長壯大，綻放生命的光彩。</p>
+    </div>
+    <div class="btn-row" style="justify-content:flex-end;"><button class="btn btn-primary" id="mClose">關閉</button></div>
+  `;
+  document.getElementById('mClose').onclick = closeModal;
+};
+
+document.getElementById('btnAudio').onclick = () => {
+  AU.enabled = !AU.enabled;
+  document.getElementById('btnAudio').textContent = `音效：${AU.enabled?'開':'關'}`;
+  if(AU.enabled) AU.click();
+};
+
+function openTeacherConsole(){
+  modalOverlay.style.display = 'flex';
+  modalCard.innerHTML = `
+    <div class="modal-head">
+      <h2 class="modal-title">教師示範控制台</h2>
+      <span class="modal-tag">已驗證・全站解鎖</span>
+    </div>
+    <div style="font-size:14px;color:var(--muted);margin-bottom:8px;">點擊下方站別即可直接切換場景並示範該站題目：</div>
+    <div class="station-list">
+      ${ST.map((s,i)=>`
+        <button class="st-card" data-tgo="${i}">
+          <div style="font-size:12px;color:var(--gold);">第 ${s.act} 幕・站別 ${i}</div>
+          <div style="font-weight:700;margin:3px 0;">${s.name}</div>
+          <div style="font-size:12px;color:var(--muted);">${s.steps ? s.steps.length+' 題' : (s.isWriting?'寫作仿寫站':'劇情導覽')}</div>
+        </button>`).join('')}
+    </div>
+    <div class="btn-row" style="justify-content:space-between;margin-top:14px;border-top:1px solid rgba(255,255,255,0.12);padding-top:12px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-secondary btn-small" id="tDemoCert">預覽證書範例</button>
+        <button class="btn btn-secondary btn-small" id="tDemoAvatar">切換角色（${G.avatar==='squirrel'?'戰士':'松鼠'}）</button>
+      </div>
+      <button class="btn btn-primary btn-small" id="mClose">關閉</button>
+    </div>
+  `;
+  modalCard.querySelectorAll('[data-tgo]').forEach(b => b.onclick = () => {
+    const idx = Number(b.dataset.tgo);
+    closeModal();
+    enterStation(idx);
+    showToast(`教師示範：已跳轉至「${ST[idx].name}」`);
+  });
+  document.getElementById('tDemoCert').onclick = () => {
+    G.sparks = ST.map(s => s.steps ? 3 : 0);
+    G.writing.s1 = '遇上困難，你會勇敢面對，還是選擇逃避？';
+    updateHUD();
+    openCertificateModal('示範學生');
+  };
+  document.getElementById('tDemoAvatar').onclick = () => {
+    const nextAv = G.avatar === 'squirrel' ? 'warrior' : 'squirrel';
+    setAvatar(nextAv);
+    openTeacherConsole();
+  };
+  document.getElementById('mClose').onclick = closeModal;
+}
+
+document.getElementById('btnTeacherDemo').onclick = () => {
+  AU.click();
+  if(G.unlocked){ openTeacherConsole(); return; }
+  modalOverlay.style.display = 'flex';
+  modalCard.innerHTML = `
+    <div class="modal-head"><h2 class="modal-title">教師示範驗證</h2><span class="modal-tag">需要密碼</span></div>
+    <div style="font-size:15px;line-height:1.6;margin-bottom:12px;">請輸入教師密碼，驗證後可自由跳轉至任意站別、切換角色與預覽學習證書：</div>
+    <input type="password" id="tdPwd" class="w-input" style="min-height:42px;" placeholder="請輸入教師密碼">
+    <div class="btn-row" style="justify-content:flex-end;">
+      <button class="btn btn-secondary btn-small" id="mClose">取消</button>
+      <button class="btn btn-primary" id="tdSubmit">驗證並開啟</button>
+    </div>
+  `;
+  const submitPwd = () => {
+    if(document.getElementById('tdPwd').value.trim() === 'ijun'){
+      G.unlocked = true;
+      showToast('驗證成功！已開啟教師示範控制台。');
+      openTeacherConsole();
+    } else {
+      AU.wrong();
+      showToast('密碼不正確');
+    }
+  };
+  document.getElementById('tdSubmit').onclick = submitPwd;
+  document.getElementById('tdPwd').onkeydown = e => { if(e.key==='Enter') submitPwd(); };
+  document.getElementById('mClose').onclick = closeModal;
+};
+
+document.getElementById('btnHelp').onclick = () => {
+  AU.click();
+  modalOverlay.style.display = 'flex';
+  modalCard.innerHTML = `
+    <div class="modal-head"><h2 class="modal-title">操作說明</h2></div>
+    <div class="story-text">
+      • <strong>移動方式</strong>：電腦請用 <code>W / A / S / D</code> 或方向鍵；平板或手機請使用左下角圓形搖桿。<br>
+      • <strong>轉動視角</strong>：在畫面上按住滑鼠或手指左右滑動。<br>
+      • <strong>開始答題</strong>：走向發光的金色光柱，點選下方出現的「進入本站學習」按鈕。<br>
+      • <strong>快速移動</strong>：如果找不到路，可以點選右下角的「前往目標點」直接移動到光柱前。
+    </div>
+    <div class="btn-row" style="justify-content:flex-end;"><button class="btn btn-primary" id="mClose">我知道了</button></div>
+  `;
+  document.getElementById('mClose').onclick = closeModal;
+};
+
+document.getElementById('btnInteract').onclick = interact;
+document.getElementById('btnTeleport').onclick = () => {
+  AU.click();
+  const tgt = ST[G.station].target();
+  P.pos.set(tgt.x, 0, tgt.z + 2.8);
+  P.yaw = 0;
+  playerGroup.position.copy(P.pos);
+  playerGroup.rotation.y = 0;
+  showToast('已移動至目標點附近！');
+};
+
+/* =========================================================
+   11. 主迴圈與啟動
+========================================================= */
+const clock = new THREE.Clock();
+const tmpColor = new THREE.Color();
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = Math.min(0.05, clock.getDelta());
+  const t = clock.elapsedTime;
+
+  // 平滑插值光影環境
+  tmpColor.set(targetEnv.bg); scene.background.lerp(tmpColor, dt*2);
+  tmpColor.set(targetEnv.fog); scene.fog.color.lerp(tmpColor, dt*2);
+  scene.fog.density += (targetEnv.fogD - scene.fog.density) * dt * 2;
+  renderer.toneMappingExposure += (targetEnv.exp - renderer.toneMappingExposure) * dt * 2;
+
+  // 光柱菱形旋轉浮動
+  beaconDiamond.rotation.y = t * 1.6;
+  beaconDiamond.position.y = 2.3 + Math.sin(t * 2.5) * 0.2;
+  beaconRing.scale.setScalar(1 + Math.sin(t * 3) * 0.08);
+
+  // 火星粒子飄升
+  for(const p of particles){
+    p.position.y += p.userData.speed * dt;
+    p.position.x = p.userData.baseX + Math.sin(t*3 + p.position.y)*0.15;
+    if(p.position.y > 3.6) p.position.y = 0.8;
+  }
+
+  // 玩家移動與第三人稱動畫
+  let moving = false;
+  if(G.started && modalOverlay.style.display !== 'flex'){
+    let fwd = (K.w ? 1 : 0) - (K.s ? 1 : 0) - K.joyY;
+    let strafe = (K.d ? 1 : 0) - (K.a ? 1 : 0) + K.joyX;
+    const mag = Math.hypot(fwd, strafe);
+    if(mag > 1){ fwd /= mag; strafe /= mag; }
+    if(mag > 0.05){
+      moving = true;
+      const sin = Math.sin(P.yaw), cos = Math.cos(P.yaw);
+      const vx = (-sin * fwd + cos * strafe);
+      const vz = (-cos * fwd - sin * strafe);
+      P.pos.x += vx * P.speed * dt;
+      P.pos.z += vz * P.speed * dt;
+      const ar = ST[G.station].area;
+      if(ar){
+        P.pos.x = Math.max(ar.x0, Math.min(ar.x1, P.pos.x));
+        P.pos.z = Math.max(ar.z0, Math.min(ar.z1, P.pos.z));
+      }
+      // 角色平滑轉向移動方向 (模型面向 -Z，所以 yaw = atan2(-vx, -vz))
+      const targetYaw = Math.atan2(-vx, -vz);
+      let diff = targetYaw - playerGroup.rotation.y;
+      while(diff > Math.PI) diff -= Math.PI * 2;
+      while(diff < -Math.PI) diff += Math.PI * 2;
+      playerGroup.rotation.y += diff * Math.min(1, dt * 12);
+    }
+    const dist = Math.hypot(P.pos.x - beacon.position.x, P.pos.z - beacon.position.z);
+    document.getElementById('targetPrompt').style.display = dist < 4.5 ? 'flex' : 'none';
+  }
+
+  playerGroup.position.copy(P.pos);
+  if(mixer){
+    const want = moving ? 'Walk' : 'Idle';
+    if(want !== currentAnim && actIdle && actWalk){
+      const fromAct = currentAnim === 'Walk' ? actWalk : actIdle;
+      const toAct = want === 'Walk' ? actWalk : actIdle;
+      toAct.reset().play();
+      fromAct.crossFadeTo(toAct, 0.2, true);
+      currentAnim = want;
+    }
+    mixer.update(dt);
+  }
+
+  // 第三人稱追隨攝影機
+  const camDist = 4.2;
+  const camH = 1.45 + Math.sin(P.pitch) * 2.2;
+  const horiz = Math.cos(P.pitch) * camDist;
+  camera.position.set(
+    P.pos.x + Math.sin(P.yaw) * horiz,
+    Math.max(0.6, P.pos.y + camH),
+    P.pos.z + Math.cos(P.yaw) * horiz
+  );
+  camera.lookAt(P.pos.x, P.pos.y + 1.15, P.pos.z);
+
+  renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// 每次載入網頁皆使用全新進度，不載入上次結果
+try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+document.getElementById('btnResume').style.display = 'none';
+
+document.querySelectorAll('.avatar-card').forEach(card => {
+  card.onclick = () => {
+    AU.click();
+    setAvatar(card.dataset.av);
+    saveState();
+  };
+});
+setAvatar(G.avatar);
+
+function startExploration(resume){
+  AU.click();
+  document.getElementById('titleScreen').style.display = 'none';
+  document.getElementById('hud').style.display = 'block';
+  G.started = true;
+  if(!resume){
+    G.station = 0; G.hp = 100; G.sparks = Array(ST.length).fill(0); G.cleared = new Set();
+  }
+  setAvatar(G.avatar);
+  enterStation(G.station);
+}
+
+document.getElementById('btnStart').onclick = () => startExploration(false);
+document.getElementById('btnResume').onclick = () => startExploration(true);
+
+// 測試鉤子
+window.__edu = { G, P, K, ST, enterStation, interact, updateHUD, setAvatar };
+
+setLoad(100, '準備就緒！');
+setTimeout(() => {
+  document.getElementById('loading').classList.add('done');
+  document.getElementById('titleScreen').style.display = 'flex';
+}, 350);
+
+animate();
+</script>
+</body>
+</html>
