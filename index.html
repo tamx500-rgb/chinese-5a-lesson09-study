@@ -216,6 +216,18 @@ input,textarea{user-select:text;-webkit-user-select:text;}
 .w-input:focus{outline:none;border-color:var(--gold);}
 .check-list{display:flex;flex-direction:column;gap:6px;margin:10px 0 14px;font-size:14px;}
 .check-item{display:flex;align-items:center;gap:8px;cursor:pointer;}
+.idiom-card-box{
+  display:grid;grid-template-columns:1fr 1.15fr;gap:12px;align-items:center;
+  background:#fffdf7;color:#2c3539;border:2px solid var(--gold);border-radius:12px;
+  padding:12px;margin:8px 0 10px;
+  background-image:linear-gradient(to right,#e7edea 1px,transparent 1px),linear-gradient(to bottom,#e7edea 1px,transparent 1px);
+  background-size:20px 20px;
+}
+@media (max-width:600px){.idiom-card-box{grid-template-columns:1fr;}}
+.idiom-card-box img{width:100%;height:auto;border-radius:8px;border:1px solid #d4e0dc;display:block;}
+.idiom-info{font-size:13.5px;line-height:1.55;}
+.idiom-title{font-size:20px;font-weight:700;color:#2c3539;margin-bottom:4px;}
+.idiom-title ruby rt{font-size:11px;color:#2f7d76;}
 
 /* 雙角色選擇卡片 */
 .avatar-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
@@ -1461,10 +1473,10 @@ function openWritingStation(st){
   modalCard.innerHTML = `
     <div class="modal-head">
       <h2 class="modal-title">${st.name}</h2>
-      <span class="modal-tag">句型仿寫練習</span>
+      <span class="modal-tag">句型仿寫＋成語造句</span>
     </div>
     <div class="writing-guide">
-      <strong>課文示範：</strong>「遇上困難，你會勇敢面對，還是選擇逃避？身處逆境，你會尋求突破，還是維持現狀？」<br>
+      <strong>任務一・課文句型示範：</strong>「遇上困難，你會勇敢面對，還是選擇逃避？身處逆境，你會尋求突破，還是維持現狀？」<br>
       <strong>句型公式：</strong><span style="color:var(--gold);">（遇到什麼狀況），你會（積極做法），還是（消極做法）？</span>
     </div>
 
@@ -1487,18 +1499,32 @@ function openWritingStation(st){
     <label style="font-size:14px;font-weight:700;">學生姓名（製作證書用）：</label>
     <input type="text" id="wName" class="w-input" style="min-height:40px;margin-top:4px;" placeholder="請輸入你的名字（例如：王小明）" value="${w.name}">
 
-    <label style="font-size:14px;font-weight:700;">仿寫第一句（必填）：</label>
+    <label style="font-size:14px;font-weight:700;">1. 設問句型仿寫（必填）：</label>
     <textarea id="wS1" class="w-input" placeholder="例：考試沒考好，你會找出錯題訂正，還是把考卷藏起來？">${w.s1}</textarea>
 
-    <label style="font-size:14px;font-weight:700;">仿寫第二句（選填，多寫一句更棒！）：</label>
-    <textarea id="wS2" class="w-input" placeholder="例：比賽落後，你會咬緊牙關追分，還是直接放棄比賽？">${w.s2}</textarea>
+    <label style="font-size:14px;font-weight:700;color:var(--gold);">2. 成語造句練習：「東山再起」（必填）</label>
+    <div class="idiom-card-box">
+      <img src="dongshanzaiqi_card.png" alt="東山再起手繪方格圖卡">
+      <div class="idiom-info">
+        <div class="idiom-title">
+          <ruby>東<rt>ㄉㄨㄥ</rt></ruby>
+          <ruby>山<rt>ㄕㄢ</rt></ruby>
+          <ruby>再<rt>ㄗㄞˋ</rt></ruby>
+          <ruby>起<rt>ㄑㄧˇ</rt></ruby>
+        </div>
+        <div><strong>意思：</strong>比喻失敗或遇到挫折後不灰心，重新振作再創好成績。</div>
+        <div style="margin-top:4px;"><strong>例句：</strong>雖然上次大隊接力掉棒，但我們勤加練習，決心今年要<strong>東山再起</strong>。</div>
+        <div style="margin-top:4px;color:#526066;font-size:12.5px;">近義：重整旗鼓、捲土重來｜反義：一蹶不振</div>
+      </div>
+    </div>
+    <textarea id="wS2" class="w-input" placeholder="請用「東山再起」造一個完整的句子（例：小明期中考失常後努力複習，終於在期末考東山再起。）">${w.s2}</textarea>
 
     <div style="font-size:14px;font-weight:700;color:var(--gold);">自我檢核表（完成後請打勾）：</div>
     <div class="check-list">
-      <label class="check-item"><input type="checkbox" class="w-chk" ${w.checks[0]?'checked':''}> 我有寫出一個具體的困難情境</label>
-      <label class="check-item"><input type="checkbox" class="w-chk" ${w.checks[1]?'checked':''}> 我有使用「……，你會……，還是……？」的句型</label>
-      <label class="check-item"><input type="checkbox" class="w-chk" ${w.checks[2]?'checked':''}> 兩個選擇有形成對比（一個積極、一個消極）</label>
-      <label class="check-item"><input type="checkbox" class="w-chk" ${w.checks[3]?'checked':''}> 句尾有加上問號「？」</label>
+      <label class="check-item"><input type="checkbox" class="w-chk" ${w.checks[0]?'checked':''}> 句型仿寫有寫出具體情境與「……，你會……，還是……？」</label>
+      <label class="check-item"><input type="checkbox" class="w-chk" ${w.checks[1]?'checked':''}> 兩個選擇有形成對比（一個積極、一個消極）</label>
+      <label class="check-item"><input type="checkbox" class="w-chk" ${w.checks[2]?'checked':''}> 成語造句有正確使用「東山再起」且語意通順</label>
+      <label class="check-item"><input type="checkbox" class="w-chk" ${w.checks[3]?'checked':''}> 兩題的標點符號（問號「？」與句號「。」）都正確</label>
     </div>
 
     <div class="btn-row" style="justify-content:space-between;">
@@ -1534,7 +1560,7 @@ function openWritingStation(st){
 
   document.getElementById('btnCopyWork').onclick = async () => {
     saveWriting();
-    const txt = `【第九課〈在挫折中成長〉句型仿寫學習單】\n學生姓名：${G.writing.name || '未填寫'}\n閱讀測驗勇氣火花：${totalSparks()} / 18\n仿寫句 1：${G.writing.s1 || '（未填寫）'}\n仿寫句 2：${G.writing.s2 || '（無）'}`;
+    const txt = `【第九課〈在挫折中成長〉寫作學習單】\n學生姓名：${G.writing.name || '未填寫'}\n閱讀測驗勇氣火花：${totalSparks()} / 18\n1. 設問句型仿寫：${G.writing.s1 || '（未填寫）'}\n2. 「東山再起」造句：${G.writing.s2 || '（未填寫）'}`;
     try{
       await navigator.clipboard.writeText(txt);
       showToast('已複製學習單內容！可以貼到作業區繳交囉。');
@@ -1546,7 +1572,8 @@ function openWritingStation(st){
   document.getElementById('btnFinishWriting').onclick = () => {
     saveWriting();
     if(!G.writing.name){ showToast('請先輸入你的名字！'); return; }
-    if(!G.writing.s1 || G.writing.s1.length < 8){ showToast('請先完成「仿寫第一句」再送出喔！'); return; }
+    if(!G.writing.s1 || G.writing.s1.length < 8){ showToast('請先完成「設問句型仿寫」再送出喔！'); return; }
+    if(!G.writing.s2 || !G.writing.s2.includes('東山再起')){ showToast('請在第二題用「東山再起」造一個完整的句子喔！'); return; }
     G.cleared.add(st.id);
     G.unlocked = true;
     saveState();
