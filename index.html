@@ -470,7 +470,7 @@ const ST = [
     obj: '走上拳擊擂臺旁的紀錄看板，認識陳念琴的故事。',
     prompt: '探索拳擊擂臺',
     pos: new THREE.Vector3(0, 0, 10),
-    target: () => new THREE.Vector3(0, 2.0, 0),
+    target: () => new THREE.Vector3(0, 0.09, 0),
     area: {x0:-18, x1:18, z0:-16, z1:16},
     text: '臺灣第一位進軍奧運的女子拳擊手陳念琴，在西元二○一六年滿懷希望踏上巴西 里約的奧運舞臺，沒想到卻在十六強止步。<em>一直以來，她比誰都認真練習，也因此，她比誰都更加失落。</em>這次的挫折讓她陷入低潮，但她慢慢調適心情，接受失敗的事實，並相信自己能東山再起，開始全力為東京 奧運備戰。',
     steps: [
@@ -515,7 +515,7 @@ const ST = [
     obj: '前往擂臺後方的三座奧運里程碑獎臺。',
     prompt: '挑戰榮耀里程碑',
     pos: new THREE.Vector3(0, 0, -2),
-    target: () => new THREE.Vector3(0, 1.8, -10),
+    target: () => new THREE.Vector3(0, 0.14, -10),
     area: {x0:-18, x1:18, z0:-16, z1:16},
     text: '正當狀態越來越好時，她卻不幸得到癌症，圓夢路上再度遇到打擊。治療的副作用讓她的體能變差，她仍堅持不斷的訓練，<em>雖然最後在八強落敗，但她已經找回當初的自信。</em>二○二四年的夏天，她三度參加奧運，終於在巴黎 奧運獲得銅牌。陳念琴的拳擊之路屢屢遇到困境，她卻能一一克服困難的考驗，將挫折化為前進的動力，勇敢的成長，創造出自己的成就。',
     steps: [
@@ -924,14 +924,14 @@ function buildAct2(g){
   if(!window.EDU_MODELS || !window.EDU_MODELS.boxing_ring){
     const ring = new THREE.Group();
     ring.position.set(0, 0, 0);
-    addMesh(ring, new THREE.BoxGeometry(8.5, 0.9, 8.5), makeMat('#39465e'), 0, 0.45, 0);
-    addMesh(ring, new THREE.BoxGeometry(7.8, 0.12, 7.8), makeMat('#3b73b9'), 0, 0.92, 0);
+    addMesh(ring, new THREE.BoxGeometry(8.4, 0.06, 8.4), makeMat('#39465e'), 0, 0.03, 0);
+    addMesh(ring, new THREE.BoxGeometry(7.8, 0.03, 7.8), makeMat('#3b73b9'), 0, 0.075, 0);
     const corners = [[-3.8,-3.8],[3.8,-3.8],[3.8,3.8],[-3.8,3.8]];
     corners.forEach(([x,z],i)=>{
       const col = i%2===0 ? '#d94e4e' : '#3b73b9';
-      addMesh(ring, new THREE.CylinderGeometry(0.14,0.14,2.2,10), makeMat(col), x, 1.9, z);
+      addMesh(ring, new THREE.CylinderGeometry(0.14,0.14,1.8,10), makeMat(col), x, 0.95, z);
     });
-    [1.45, 1.95, 2.45].forEach(y=>{
+    [0.55, 1.00, 1.45].forEach(y=>{
       addMesh(ring, new THREE.BoxGeometry(7.6, 0.06, 0.06), makeMat('#e6e6e6'), 0, y, -3.8);
       addMesh(ring, new THREE.BoxGeometry(7.6, 0.06, 0.06), makeMat('#e6e6e6'), 0, y, 3.8);
       addMesh(ring, new THREE.BoxGeometry(0.06, 0.06, 7.6), makeMat('#e6e6e6'), -3.8, y, 0);
@@ -942,9 +942,9 @@ function buildAct2(g){
 
   // 三座奧運里程碑獎臺 (2016 里約 → 東京 → 2024 巴黎銅牌)
   const podiums = [
-    {x:-4.5, z:-10, h:1.0, c:'#7d8597', medal:false},
-    {x:0,    z:-10, h:1.5, c:'#4e89ae', medal:false},
-    {x:4.5,  z:-10, h:2.0, c:'#cd7f32', medal:true}
+    {x:-4.5, z:-10, h:0.08, c:'#7d8597', medal:false},
+    {x:0,    z:-10, h:0.14, c:'#4e89ae', medal:false},
+    {x:4.5,  z:-10, h:0.22, c:'#cd7f32', medal:true}
   ];
   podiums.forEach(p=>{
     addMesh(g, new THREE.BoxGeometry(2.4, p.h, 2.0), makeMat(p.c, 0.5), p.x, p.h/2, p.z);
@@ -1818,10 +1818,21 @@ document.getElementById('btnHelp').onclick = () => {
 };
 
 document.getElementById('btnInteract').onclick = interact;
+function getAct2GroundY(x, z){
+  if(Math.abs(x) <= 4.1 && Math.abs(z) <= 4.1) return 0.09;
+  if(z >= -11.05 && z <= -8.95){
+    if(Math.abs(x - (-4.5)) <= 1.25) return 0.08;
+    if(Math.abs(x) <= 1.25) return 0.14;
+    if(Math.abs(x - 4.5) <= 1.25) return 0.22;
+  }
+  return 0;
+}
 document.getElementById('btnTeleport').onclick = () => {
   AU.click();
   const tgt = ST[G.station].target();
-  P.pos.set(tgt.x, 0, tgt.z + 2.8);
+  const tz = tgt.z + 2.8;
+  const gy = ST[G.station].act === 2 ? getAct2GroundY(tgt.x, tz) : 0;
+  P.pos.set(tgt.x, gy, tz);
   P.yaw = 0;
   playerGroup.position.copy(P.pos);
   playerGroup.rotation.y = 0;
@@ -1876,6 +1887,8 @@ function animate(){
         P.pos.x = Math.max(ar.x0, Math.min(ar.x1, P.pos.x));
         P.pos.z = Math.max(ar.z0, Math.min(ar.z1, P.pos.z));
       }
+      // 第二幕拳擊擂臺與奧運獎臺地面高度貼合，避免人物腳底陷入模型
+      P.pos.y = ST[G.station].act === 2 ? getAct2GroundY(P.pos.x, P.pos.z) : 0;
       // 角色平滑轉向移動方向 (模型面向 -Z，所以 yaw = atan2(-vx, -vz))
       const targetYaw = Math.atan2(-vx, -vz);
       let diff = targetYaw - playerGroup.rotation.y;
